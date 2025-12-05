@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.31)
+cmake_minimum_required(VERSION 3.26)
 project(we_live_in_a_society)
 
 set(CMAKE_C_STANDARD 11)
