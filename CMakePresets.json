@@ -10,7 +10,6 @@
       "name": "base",
       "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
-        "CMAKE_UNITY_BUILD": "TRUE",
         "PLATFORM": "Desktop"
       }
     },
