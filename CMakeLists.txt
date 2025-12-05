@@ -15,5 +15,6 @@ if (${PLATFORM} STREQUAL "Web")
 endif()
 
 add_executable(society_test src/main.c)
+add_executable(hello_test src/main_hello_test.c)
 
 target_link_libraries(society_test PRIVATE raylib m)
