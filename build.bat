@@ -35,7 +35,14 @@ if %errorlevel%==0 (
 
 echo Running CMake workflow...
 
-cmake --workflow --preset debug
+:: Check if exactly one argument was passed
+if "%~1"=="" (
+    echo Error: You must pass exactly one argument.
+    echo Usage: %0 <debug|release|release-web>
+    exit /b 1
+)
+
+cmake --workflow --preset %1
 
 echo Done.
 
