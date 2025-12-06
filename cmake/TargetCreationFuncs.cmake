@@ -1,7 +1,7 @@
 include_guard(DIRECTORY)
 
 set_property(DIRECTORY PROPERTY JOKER_COMPILER_FLAGS "-Wall;-Wextra;-Werror")
-set_property(DIRECTORY PROPERTY JOKER_MSVC_COMPILER_FLAGS "/W4;/WX")
+set_property(DIRECTORY PROPERTY JOKER_MSVC_COMPILER_FLAGS "/W4;/WX;/permissive-")
 
 function( _joker_set_options name )
     if (MSVC)
