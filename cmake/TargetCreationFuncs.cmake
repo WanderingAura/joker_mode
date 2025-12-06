@@ -40,5 +40,10 @@ function( joker_target_link_raylib target )
 
     if (${PLATFORM} STREQUAL "Web")
         set_target_properties(${target} PROPERTIES SUFFIX ".html")
+    elseif(UNIX)
+        # since we put our output binaries in the project root
+        # (requested by mien fuhrer) we need an extension
+        # in linux for .gitignore
+        set_target_properties(${target} PROPERTIES SUFFIX ".bin")
     endif()
 endfunction()
