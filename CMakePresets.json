@@ -14,6 +14,14 @@
       }
     },
     {
+      "name": "base-web",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "PLATFORM": "Web",
+        "CMAKE_TOOLCHAIN_FILE": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"
+      }
+    },
+    {
       "name": "debug",
       "inherits": "base",
       "cacheVariables": {
@@ -21,8 +29,22 @@
       }
     },
     {
+      "name": "debug-web",
+      "inherits": "base-web",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
       "name": "release",
       "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "release-web",
+      "inherits": "base-web",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
@@ -43,6 +65,14 @@
     {
       "name": "release",
       "configurePreset": "release"
+    },
+    {
+      "name": "debug-web",
+      "configurePreset": "debug-web"
+    },
+    {
+      "name": "release-web",
+      "configurePreset": "release-web"
     }
   ],
   "workflowPresets": [
@@ -69,6 +99,19 @@
         {
           "type": "build",
           "name": "release"
+        }
+      ]
+    },
+    {
+      "name": "release-web",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "release-web"
+        },
+        {
+          "type": "build",
+          "name": "release-web"
         }
       ]
     }

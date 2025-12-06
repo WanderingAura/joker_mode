@@ -1,7 +1,7 @@
 #!/bin/bash
 usage()
 {
-  echo "Usage: $0 <debug|release>"
+  echo "Usage: $0 <debug|release|release-web>"
 }
 
 if [[ $# -ne 1 ]] ; then
@@ -9,4 +9,6 @@ if [[ $# -ne 1 ]] ; then
   exit 1
 fi
 
-cmake --workflow --preset debug
+build=$1
+
+cmake --workflow --preset $build

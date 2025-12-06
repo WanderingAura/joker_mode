@@ -6,7 +6,9 @@ set(CMAKE_C_STANDARD_REQUIRED TRUE)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-include(FindRaylib)
+option(ENABLE_UNITY_BUILD "Enable unity build compilation for targets that support it" ON)
+
+include(FindJokerLibraries)
 
 # Web Configurations
 if (${PLATFORM} STREQUAL "Web")
@@ -14,7 +16,4 @@ if (${PLATFORM} STREQUAL "Web")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY -s GL_ENABLE_GET_PROC_ADDRESS=1")
 endif()
 
-add_executable(society_test src/main.c)
-add_executable(hello_test src/main_hello_test.c)
-
-target_link_libraries(society_test PRIVATE raylib m)
+add_subdirectory(src)
