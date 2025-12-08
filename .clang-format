@@ -1,0 +1,5 @@
+BasedOnStyle: Google
+IndentWidth: 4
+ContinuationIndentWidth: 8
+ColumnLimit: 150
+AlignAfterOpenBracket: DontAlign
