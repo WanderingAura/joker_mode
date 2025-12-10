@@ -22,3 +22,10 @@ typedef s64 b64;
 
 /* ==== BASIC MACROS ==== */
 #define ArrayCount(arr) (sizeof(arr)/(sizeof(*(arr))))
+#define STRINGIFY(s) #s
+
+// returns the most significant byte of an integral value
+#define GetMSB(x) ((x) >> (sizeof(x) * 8 - 8))
+
+// the least significant 3 bytes of an integral value
+#define GetLS3B(x) ((x) & 0xffffff)

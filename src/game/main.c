@@ -18,6 +18,8 @@
 ********************************************************************************************/
 
 #include "raylib.h"
+#include "efs_entity.h"
+#include <stdio.h>
 
 //------------------------------------------------------------------------------------
 // Program main entry point
@@ -26,6 +28,9 @@ int main(void)
 {
     // Initialization
     //--------------------------------------------------------------------------------------
+    efs_Entity entity = {};
+    entity.props[0] = 1;
+    printf("entity has CanMove prop: %d\n", efs_EntityHasProperty(&entity, efs_prop_CanMove));
     const int screenWidth = 800;
     const int screenHeight = 450;
 
