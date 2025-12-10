@@ -69,11 +69,24 @@ efs_Entity* initPool() {
 
 bool efs_EntityHasProperty(efs_Entity const* entity, efs_PropertyType prop)
 {
+    assert(entity != NULL);
     u64 propLoc = entity->props[prop/NUM_PROPS_IN_U64];
 
     return propLoc & (1 << (prop % NUM_PROPS_IN_U64));
 }
 
 void efs_SetEntityProperty(efs_Entity *entity, efs_PropertyType prop) {
-    entity->props[prop/NUM_PROPS_IN_U64] = 1;
+    assert(entity != NULL);
+    entity->props[prop/NUM_PROPS_IN_U64] |= (1 << (prop % NUM_PROPS_IN_U64));
+}
+
+void efs_SetEntityProperties(efs_Entity* entity, efs_PropertyType* props, u32 numProps)
+{
+    assert(entity != NULL);
+    assert(numProps <= PROPERTY_MAX_NUM);
+
+    for (int i = 0; i < numProps; i++)
+    {
+        efs_SetEntityProperty(entity, props[i]);
+    }
 }
