@@ -1,0 +1,13 @@
+#!/bin/bash
+
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+if [[ "$CURRENT_BRANCH" != "master" ]]; then
+    exit 0
+fi
+
+echo "😠Merge commits into 'master' are big poopoo💩"
+echo "Use rebase (GIGACHAD):"
+echo ""
+echo "  git rebase master"
+echo ""
+echo "Then push the rebased branch onto master."

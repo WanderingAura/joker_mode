@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# pre-push hook that disables force pushing to master and makes sure build.sh debug
+# is successful
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+
+PROTECTED_BRANCH="master"
+
+while read local_ref local_sha remote_ref remote_sha ; do
+	BRANCH_NAME=$(echo "$local_ref" | sed 's|refs/heads/||')
+
+	if [[ "$BRANCH_NAME" != "$PROTECTED_BRANCH" ]] ; then
+		continue
+	fi
+
+	if git merge-base --is-ancestor "$remote_sha" "$local_sha"; then
+		continue;
+	else
+		echo "Force push to '$PROTECTED_BRANCH' is not allowed!"
+		echo "Please do a fast-forward rebase."
+		exit 1
+	fi
+done
+
+
+echo "Pre-push hook: Running debug build..."
+"$REPO_ROOT/build.sh" debug
+ret=$?
+
+if [[ $ret -ne 0 ]] ; then
+	echo "Pre-push hook: build failed. Not pushing"
+	exit 1
+fi
+
+echo "Pre-push hook: success"
+exit 0
