@@ -29,4 +29,4 @@ typedef struct efs_Entity {
 
 bool efs_EntityHasProperty(efs_Entity const* entity, efs_PropertyType prop);
 
-void efs_SetEntityProperty(efs_Entity const* entity, efs_PropertyType prop);
+void efs_SetEntityProperty(efs_Entity* entity, efs_PropertyType prop);

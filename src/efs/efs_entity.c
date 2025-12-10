@@ -21,6 +21,7 @@ int addToPool(efs_Entity* pool, efs_Entity entity) {
 
     activeHead = freeHead;
     freeHead = nextFreeHead;
+    return 0;
 }
 
 void deleteFromPool(efs_Entity* pool, int index) {
@@ -60,6 +61,8 @@ efs_Entity* initPool() {
 
     int poolNextFree = 1;
     int poolFirstUsed = 0;
+    
+    return entityPool;
 }
       
 
