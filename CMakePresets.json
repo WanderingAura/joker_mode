@@ -36,6 +36,14 @@
       }
     },
     {
+      "name": "debug-no-warning",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "JOKER_NO_WARNINGS": "ON"
+      }
+    },
+    {
       "name": "release",
       "inherits": "base",
       "cacheVariables": {
@@ -63,6 +71,10 @@
       "configurePreset": "debug"
     },
     {
+      "name": "debug-no-warning",
+      "configurePreset": "debug-no-warning"
+    },
+    {
       "name": "release",
       "configurePreset": "release"
     },
@@ -86,6 +98,19 @@
         {
           "type": "build",
           "name": "debug"
+        }
+      ]
+    },
+    {
+      "name": "debug-no-warning",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "debug-no-warning"
+        },
+        {
+          "type": "build",
+          "name": "debug-no-warning"
         }
       ]
     },
