@@ -17,12 +17,8 @@
 
 vos_DLLHandle vos_DLLLoad(const char* file)
 {
-    const char* fileName = GetFileNameWithoutExt(file);
-    assert(strlen(fileName) < FILE_NAME_LEN_MAX);
-
     char tmpFile[FILE_NAME_LEN_MAX];
-    int n = sprintf(tmpFile, "%s" vos_DLL_ACTIVE_SUFFIX, fileName);
-    assert((size_t)n == strlen(fileName) + strlen(vos_DLL_ACTIVE_SUFFIX));
+    GetTmpDLLName(tmpFile, file);
 
     char copyCommand[COPY_COMMAND_LEN_MAX];
     n = sprintf(copyCommand, "cp %s %s", file, tmpFile);

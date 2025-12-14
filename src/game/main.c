@@ -5,6 +5,11 @@
 #include <stdio.h>
 
 // stubs to use if the dynamic loading of the game functions fail
+static void GameModuleInitStub(void)
+{
+    return;
+}
+
 static void GameMemoryInitStub(soc_GameMemory* memory)
 {
     (void)memory;
@@ -17,6 +22,7 @@ static void GameUpdateStub(soc_GameMemory* memory)
 }
 
 typedef struct {
+    soc_FuncGameModuleInit* ModuleInit;
     soc_FuncGameMemoryInit* MemoryInit;
     soc_FuncGameUpdate* Update;
 } GameFuncs;
@@ -28,23 +34,29 @@ GameFuncs GetGameFuncs(vos_DLLHandle dll)
 {
     assert(dll != NULL);
 
-    GameFuncs gameFuncs = {};
-    vos_DLLFuncPtr fnInit = vos_DLLGetFunc(dll, "soc_GameMemoryInit");
-    if (fnInit)
+    GameFuncs gameFuncs = {0};
+    vos_DLLFuncPtr fnModuleInit = vos_DLLGetFunc(dll, "soc_GameModuleInit");
+    if (fnModuleInit)
     {
-        gameFuncs.MemoryInit = fnInit;
+        gameFuncs.ModuleInit = (soc_FuncGameModuleInit*)fnModuleInit;
     }
 
+    vos_DLLFuncPtr fnMemoryInit = vos_DLLGetFunc(dll, "soc_GameMemoryInit");
+    if (fnMemoryInit)
+    {
+        gameFuncs.MemoryInit = (soc_FuncGameMemoryInit*)fnMemoryInit;
+    }
 
     vos_DLLFuncPtr fnUpdate = vos_DLLGetFunc(dll, "soc_GameUpdate");
     if (fnUpdate)
     {
-        gameFuncs.Update = fnUpdate;
+        gameFuncs.Update = (soc_FuncGameUpdate*)fnUpdate;
     }
 
     // if we failed to get either of the functions then we use the stubs instead
-    if (!fnInit || !fnUpdate)
+    if (!fnModuleInit || !fnMemoryInit || !fnUpdate)
     {
+        gameFuncs.ModuleInit = GameModuleInitStub;
         gameFuncs.MemoryInit = GameMemoryInitStub;
         gameFuncs.Update = GameUpdateStub;
     }
@@ -70,6 +82,7 @@ int main(void)
 
     soc_GameMemory gameMemory = {};
     gameFuncs.MemoryInit(&gameMemory);
+    gameFuncs.ModuleInit();
 
     long dllLastModTime = GetFileModTime(GAME_DLL_FILE_NAME);
     bool dllWasModifying = false;
@@ -105,6 +118,7 @@ int main(void)
                 goto cleanup;
             }
             gameFuncs = GetGameFuncs(gameDLL);
+            gameFuncs.ModuleInit();
         }
 
         gameFuncs.Update(&gameMemory);

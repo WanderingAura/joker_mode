@@ -4,7 +4,7 @@
 typedef void* vos_DLLFuncPtr;
 typedef void* vos_DLLHandle;
 
-#ifdef __WIN32__
+#if defined(_WIN32)
   #define vos_DLL_EXTENSION "dll"
   #define vos_DLL_PREFIX ""
 #elif defined(__linux__)
@@ -24,3 +24,5 @@ vos_DLLHandle vos_DLLLoad(const char* path);
 s64 vos_DLLUnload(vos_DLLHandle handle);
 
 vos_DLLFuncPtr vos_DLLGetFunc(vos_DLLHandle handle, const char* funcName);
+
+void GetTmpDLLName(char* dest, const char* file);

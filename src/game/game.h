@@ -7,5 +7,6 @@ typedef struct {
     float timeSinceLastFrame;
 } soc_GameMemory;
 
+typedef void soc_FuncGameModuleInit(void);
 typedef void soc_FuncGameMemoryInit(soc_GameMemory* memory);
 typedef void soc_FuncGameUpdate(soc_GameMemory* memory);

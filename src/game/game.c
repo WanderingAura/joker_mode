@@ -4,15 +4,31 @@
 #include "based_basic.h"
 #include "game.h"
 
-static Color colorSet[] = {MAGENTA, BLUE, RED}; // NOTE: temporary scuffed code
+#if defined(__linux__)
+  #define SOC_EXPORT
+#elif defined(_WIN32)
+  #define SOC_EXPORT __declspec(dllexport)
+#else
+#error OS/Compiler unsupported
+#endif
 
-void soc_GameMemoryInit(soc_GameMemory* memory)
+#define COLOR_SET_SIZE 3
+static Color colorSet[COLOR_SET_SIZE];
+
+SOC_EXPORT void soc_GameModuleInit()
+{
+    colorSet[0] = WHITE;
+    colorSet[1] = BLUE;
+    colorSet[2] = RED;
+}
+
+SOC_EXPORT void soc_GameMemoryInit(soc_GameMemory* memory)
 {
     memset(memory, 0, sizeof(soc_GameMemory));
     memory->lonelyRec = (Rectangle){300,300, 100, 100};
 }
 
-void soc_GameUpdate(soc_GameMemory* memory)
+SOC_EXPORT void soc_GameUpdate(soc_GameMemory* memory)
 {
     static u32 colorIdx = 0; // NOTE: temporary scuffed code
     if (memory->timeSinceLastFrame > 1.0f)
@@ -30,7 +46,7 @@ void soc_GameUpdate(soc_GameMemory* memory)
     BeginDrawing();
     {
         ClearBackground(BLACK);
-        DrawRectangleRec(memory->lonelyRec, colorSet[colorIdx%(ArrayCount(colorSet))]);
+        DrawRectangleRec(memory->lonelyRec, colorSet[colorIdx%COLOR_SET_SIZE]);
     }
     EndDrawing();
 
