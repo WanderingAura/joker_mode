@@ -40,12 +40,7 @@ function( joker_add_exe target )
 
 endfunction()
 
-function( joker_target_link_raylib target )
-    target_link_libraries(${target} PRIVATE raylib)
-    if (UNIX)
-        target_link_libraries(${target} PRIVATE m)
-    endif()
-
+function( joker_exe_ext target )
     if (${PLATFORM} STREQUAL "Web")
         set_target_properties(${target} PROPERTIES SUFFIX ".html")
     elseif(UNIX)
@@ -53,5 +48,12 @@ function( joker_target_link_raylib target )
         # (requested by mien fuhrer) we need an extension
         # in linux for .gitignore
         set_target_properties(${target} PROPERTIES SUFFIX ".bin")
+    endif()
+endfunction()
+
+function( joker_target_link_raylib target )
+    target_link_libraries(${target} PRIVATE raylib)
+    if (UNIX)
+        target_link_libraries(${target} PRIVATE m)
     endif()
 endfunction()

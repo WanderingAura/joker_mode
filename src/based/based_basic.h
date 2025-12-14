@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <stddef.h>
 
 /* ==== BASIC TYPES ==== */
 typedef uint8_t u8;
