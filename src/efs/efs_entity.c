@@ -1,4 +1,6 @@
 #include "efs_entity.h"
+#include <stdio.h>
+#include <string.h>
 
 #define entityPoolSize 100
 

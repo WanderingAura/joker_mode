@@ -8,3 +8,6 @@ compile_commands.json
 *.js
 *.wasm
 *.pdb
+*.so.*
+*.so
+*.dll
