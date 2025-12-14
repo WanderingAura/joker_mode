@@ -1,4 +1,4 @@
-joker_add_lib(efs)
+joker_add_lib(efs STATIC)
 
 target_sources(efs PRIVATE
     efs_entity.c

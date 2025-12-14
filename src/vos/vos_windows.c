@@ -29,11 +29,24 @@ vos_DLLHandle vos_DLLLoad(const char* file)
   char tmpFile[FILE_NAME_LEN_MAX];
   GetTmpDLLName(tmpFile, file);
 
-  bool success = CopyFileA(file, tmpFile, false);
+  DWORD err;
+  bool success;
+  // TODO: this do while is a crappy workaround for windows still holding the lock
+  // to the DLL for a while (~20ms) even after the compiler has finished modifying it.
+  // so we just keep copying until it's successful. Note that this seems to only
+  // happen with the Ninja generator.
+  // a possible better fix would be to create a function IsDLLReady() and only call DLLLoad() when
+  // the DLL has 1. been modified and 2. is ready to be copied.
+  do {
+    success = CopyFileA(file, tmpFile, false);
+    err = GetLastError();
+    printf("trying to copy file\n");
+    Sleep(5);
+  } while (!success && err == ERROR_SHARING_VIOLATION);
   if (!success)
   {
     WIN32_GetLastErrorString(errMsg);
-    printf("CopyFile failed: %s\n", errMsg);
+    printf("CopyFile failed: %s %d\n", errMsg, err);
     return NULL;
   }
 
