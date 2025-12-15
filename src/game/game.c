@@ -19,7 +19,7 @@ SOC_EXPORT void soc_GameModuleInit()
 {
     colorSet[0] = WHITE;
     colorSet[1] = ORANGE;
-    colorSet[2] = RED;
+    colorSet[2] = BLUE;
 }
 
 SOC_EXPORT void soc_GameMemoryInit(soc_GameMemory* memory)

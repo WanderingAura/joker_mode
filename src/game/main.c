@@ -4,6 +4,11 @@
 #include <assert.h>
 #include <stdio.h>
 
+#include "based_logging.h"
+
+#define GAME_DLL_NAME "soc"
+#define GAME_DLL_FILE_NAME (vos_DLL_PREFIX GAME_DLL_NAME "." vos_DLL_EXTENSION)
+
 // stubs to use if the dynamic loading of the game functions fail
 static void GameModuleInitStub(void)
 {
@@ -26,9 +31,6 @@ typedef struct {
     soc_FuncGameMemoryInit* MemoryInit;
     soc_FuncGameUpdate* Update;
 } GameFuncs;
-
-#define GAME_DLL_NAME "soc"
-#define GAME_DLL_FILE_NAME (vos_DLL_PREFIX GAME_DLL_NAME "." vos_DLL_EXTENSION)
 
 GameFuncs GetGameFuncs(vos_DLLHandle dll)
 {
@@ -104,6 +106,7 @@ int main(void)
         // if the dll has done being modified by the compiler
         if (dllWasModifying && !dllModifying)
         {
+            BSD_INF("Game DLL has been modified. Performing hot reload...");
             dllWasModifying = false;
             s64 ret = vos_DLLUnload(gameDLL);
             if (ret != 0)
@@ -119,6 +122,7 @@ int main(void)
             }
             gameFuncs = GetGameFuncs(gameDLL);
             gameFuncs.ModuleInit();
+            BSD_INF("Hot reload successful");
         }
 
         gameFuncs.Update(&gameMemory);
