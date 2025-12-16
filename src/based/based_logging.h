@@ -8,11 +8,24 @@ typedef enum {
     bsd_LogLevel_Critical
 } bsd_LogLevel;
 
+
+static inline const char* filename(const char* path)
+{
+    const char* file = path;
+    for (const char* p = path; *p; ++p) {
+        if (*p == '/' || *p == '\\')
+            file = p + 1;
+    }
+    return file;
+}
+
+#define _BSD_CUR_FILE_NAME filename(__FILE__)
+
 #ifdef BSD_LOG_TO_FILE
   #error Not implemented yet
   #define BSD_LOG(...)
 #else
-  #define BSD_LOG(level, fmt, ...) bsd_log(stdout, level, __LINE__, __FILE__, fmt __VA_OPT__(,) __VA_ARGS__)
+  #define BSD_LOG(level, fmt, ...) bsd_log(stdout, level, __LINE__, _BSD_CUR_FILE_NAME, fmt __VA_OPT__(,) __VA_ARGS__)
 #endif
 
 #define BSD_DBG(fmt, ...) BSD_LOG(bsd_LogLevel_Debug, fmt __VA_OPT__(,) __VA_ARGS__)

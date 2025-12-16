@@ -6,9 +6,20 @@
 #include "based_logging.h"
 
 #define LOG_LINE_LEN_MAX 4096
+static bsd_LogLevel currentLogLevel = bsd_LogLevel_Info;
+
+void bsd_SetLogLevel(bsd_LogLevel level)
+{
+    currentLogLevel = level;
+}
 
 void bsd_log(FILE* logFile, bsd_LogLevel level, int line, const char* restrict file, const char* restrict fmt, ...)
 {
+    if (level < currentLogLevel)
+    {
+        return;
+    }
+
     static char* dbgLevels[] =
     {
         "DEBUG",
