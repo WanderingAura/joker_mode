@@ -6,6 +6,7 @@
 #include <stdbool.h>
 
 #include "vos.h"
+#include "based_logging.h"
 
 #define WINDOWS_ERROR_MESSAGE_LEN_MAX 256
 
@@ -17,7 +18,7 @@ static void WIN32_GetLastErrorString(char* errMsg)
   
   if (ret == 0)
   {
-    printf("Formatting message for error code %d failed\n", errCode);
+    BSD_ERR("Formatting message for error code %d failed\n", errCode);
     errMsg[0] = 0;
   }
 }
@@ -40,13 +41,13 @@ vos_DLLHandle vos_DLLLoad(const char* file)
   do {
     success = CopyFileA(file, tmpFile, false);
     err = GetLastError();
-    printf("trying to copy file\n");
+    BSD_DBG("trying to copy file\n");
     Sleep(5);
   } while (!success && err == ERROR_SHARING_VIOLATION);
   if (!success)
   {
     WIN32_GetLastErrorString(errMsg);
-    printf("CopyFile failed: %s %d\n", errMsg, err);
+    BSD_ERR("CopyFile failed: %s %d\n", errMsg, err);
     return NULL;
   }
 
@@ -54,7 +55,7 @@ vos_DLLHandle vos_DLLLoad(const char* file)
   if (!handle)
   {
     WIN32_GetLastErrorString(errMsg);
-    printf("LoadLibrary failed: %s\n", errMsg);
+    BSD_ERR("LoadLibrary failed: %s\n", errMsg);
   }
 
   return handle;
@@ -67,7 +68,7 @@ s64 vos_DLLUnload(vos_DLLHandle handle)
   if (!success)
   {
     WIN32_GetLastErrorString(errMsg);
-    printf("An error occurred while unloading library: %s\n", errMsg);
+    BSD_ERR("An error occurred while unloading library: %s\n", errMsg);
     return 1;
   }
   return 0;
@@ -81,7 +82,7 @@ vos_DLLFuncPtr vos_DLLGetFunc(vos_DLLHandle handle, const char* funcName)
   if (!ptr)
   {
     WIN32_GetLastErrorString(errMsg);
-    printf("Getting library function %s failed: %s\n", funcName, errMsg);
+    BSD_ERR("Getting library function %s failed: %s\n", funcName, errMsg);
   }
   return ptr;
 }

@@ -3,7 +3,6 @@
 #endif
 #include <dlfcn.h>
 #include <raylib.h>
-#include "vos.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -11,6 +10,9 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <unistd.h>
+
+#include "vos.h"
+#include "based_logging.h"
 
 #define COPY_COMMAND_LEN_MAX (FILE_NAME_LEN_MAX * 3)
 #define COPY_COMMAND_BYTES 4
@@ -28,12 +30,12 @@ vos_DLLHandle vos_DLLLoad(const char* file)
     if (ret == -1)
     {
         int err = errno;
-        printf("Failed to copy DLL: %s\n", strerror(err));
+        BSD_ERR("Failed to copy DLL: %s\n", strerror(err));
         return NULL;
     }
     else if (ret != 0)
     {
-        printf("Copy command failed. Child exited with status %d\n", ret);
+        BSD_ERR("Copy command failed. Child exited with status %d\n", ret);
         return NULL;
     }
 
@@ -43,7 +45,7 @@ vos_DLLHandle vos_DLLLoad(const char* file)
     vos_DLLHandle handle = dlopen(tmpFile, RTLD_NOW);
     if (handle == NULL)
     {
-        printf("An error occured while loading the %s library: %s\n", file, dlerror());
+        BSD_ERR("An error occured while loading the %s library: %s\n", file, dlerror());
     }
     return handle;
 }
@@ -53,7 +55,7 @@ s64 vos_DLLUnload(vos_DLLHandle handle)
     int ret = dlclose(handle);
     if (ret != 0)
     {
-        printf("An error occurred while unloading library: %s\n", dlerror());
+        BSD_ERR("An error occurred while unloading library: %s\n", dlerror());
     }
     return ret;
 }
@@ -63,7 +65,7 @@ vos_DLLFuncPtr vos_DLLGetFunc(vos_DLLHandle handle, const char* funcName)
     vos_DLLFuncPtr ptr = dlsym(handle, funcName);
     if (ptr == NULL)
     {
-        printf("Getting library function %s failed: %s\n", funcName, dlerror());
+        BSD_ERR("Getting library function %s failed: %s\n", funcName, dlerror());
     }
     return ptr;
 }

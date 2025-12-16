@@ -111,13 +111,13 @@ int main(void)
             s64 ret = vos_DLLUnload(gameDLL);
             if (ret != 0)
             {
-                printf("Failed to unload DLL\n");
+                BSD_ERR("Failed to unload DLL\n");
                 goto cleanup;
             }
             gameDLL = vos_DLLLoad(GAME_DLL_FILE_NAME);
             if (!gameDLL)
             {
-                printf("Failed to load DLL\n");
+                BSD_ERR("Failed to load DLL\n");
                 goto cleanup;
             }
             gameFuncs = GetGameFuncs(gameDLL);
