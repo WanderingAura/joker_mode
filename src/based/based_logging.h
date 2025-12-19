@@ -35,4 +35,4 @@ static inline const char* filename(const char* path)
 #define BSD_CRIT(fmt, ...) BSD_LOG(bsd_LogLevel_Critical, fmt __VA_OPT__(,) __VA_ARGS__)
 
 void bsd_log(FILE* logFile, bsd_LogLevel level, int line, const char* restrict file, const char* restrict fmt, ...);
-
+void bsd_SetLogLevel(bsd_LogLevel level);

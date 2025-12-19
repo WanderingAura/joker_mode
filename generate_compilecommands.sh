@@ -9,4 +9,3 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 cp build/compile_commands/compile_commands.json .
-rm -rf build/compile_commands

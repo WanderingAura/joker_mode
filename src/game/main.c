@@ -10,8 +10,9 @@
 #define GAME_DLL_FILE_NAME (vos_DLL_PREFIX GAME_DLL_NAME "." vos_DLL_EXTENSION)
 
 // stubs to use if the dynamic loading of the game functions fail
-static void GameModuleInitStub(void)
+static void GameModuleInitStub(soc_GameMemory* memory)
 {
+    (void)memory;
     return;
 }
 
@@ -84,7 +85,7 @@ int main(void)
 
     soc_GameMemory gameMemory = {};
     gameFuncs.MemoryInit(&gameMemory);
-    gameFuncs.ModuleInit();
+    gameFuncs.ModuleInit(&gameMemory);
 
     long dllLastModTime = GetFileModTime(GAME_DLL_FILE_NAME);
     bool dllWasModifying = false;
@@ -111,17 +112,17 @@ int main(void)
             s64 ret = vos_DLLUnload(gameDLL);
             if (ret != 0)
             {
-                BSD_ERR("Failed to unload DLL\n");
+                BSD_ERR("Failed to unload DLL");
                 goto cleanup;
             }
             gameDLL = vos_DLLLoad(GAME_DLL_FILE_NAME);
             if (!gameDLL)
             {
-                BSD_ERR("Failed to load DLL\n");
+                BSD_ERR("Failed to load DLL");
                 goto cleanup;
             }
             gameFuncs = GetGameFuncs(gameDLL);
-            gameFuncs.ModuleInit();
+            gameFuncs.ModuleInit(&gameMemory);
             BSD_INF("Hot reload successful");
         }
 
