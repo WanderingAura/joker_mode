@@ -50,5 +50,8 @@ void bsd_log(FILE* logFile, bsd_LogLevel level, int line, const char* restrict f
     va_end(args);
 
     n = fprintf(logFile, "%s\n", logBuf);
+#ifdef BSD_FLUSH_ON_LOG
+    fflush(logFile);
+#endif
     assert(n > 0);
 }

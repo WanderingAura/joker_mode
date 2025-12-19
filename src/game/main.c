@@ -71,7 +71,7 @@ int main(void)
 {
     const int screenWidth = 800;
     const int screenHeight = 600;
-
+    bsd_SetLogLevel(bsd_LogLevel_Debug);
 
     InitWindow(screenWidth, screenHeight, "hot reload test");
     SetTargetFPS(60);
@@ -83,18 +83,24 @@ int main(void)
     }
     GameFuncs gameFuncs = GetGameFuncs(gameDLL);
 
-    soc_GameMemory gameMemory = {};
-    gameFuncs.MemoryInit(&gameMemory);
-    gameFuncs.ModuleInit(&gameMemory);
+    soc_GameMemory* gameMemory = MemAlloc(sizeof(*gameMemory));
+    gameFuncs.MemoryInit(gameMemory);
+    gameFuncs.ModuleInit(gameMemory);
 
     long dllLastModTime = GetFileModTime(GAME_DLL_FILE_NAME);
     bool dllWasModifying = false;
+    bool doHardReset = false;
 
     while (!WindowShouldClose())
     {
         long dllCurModTime = GetFileModTime(GAME_DLL_FILE_NAME);
 
         bool dllModifying = false;
+
+        if (GetKeyPressed() == KEY_F5)
+        {
+            doHardReset = true;
+        }
 
         // checks if DLL is being modified
         if (dllCurModTime > dllLastModTime)
@@ -105,7 +111,7 @@ int main(void)
         }
 
         // if the dll has done being modified by the compiler
-        if (dllWasModifying && !dllModifying)
+        if ((dllWasModifying && !dllModifying) || doHardReset)
         {
             BSD_INF("Game DLL has been modified. Performing hot reload...");
             dllWasModifying = false;
@@ -115,6 +121,10 @@ int main(void)
                 BSD_ERR("Failed to unload DLL");
                 goto cleanup;
             }
+            if (doHardReset)
+            {
+                MemFree(gameMemory);
+            }
             gameDLL = vos_DLLLoad(GAME_DLL_FILE_NAME);
             if (!gameDLL)
             {
@@ -122,11 +132,17 @@ int main(void)
                 goto cleanup;
             }
             gameFuncs = GetGameFuncs(gameDLL);
-            gameFuncs.ModuleInit(&gameMemory);
+            if (doHardReset)
+            {
+                gameMemory = MemAlloc(sizeof(*gameMemory));
+                gameFuncs.MemoryInit(gameMemory);
+            }
+            gameFuncs.ModuleInit(gameMemory);
             BSD_INF("Hot reload successful");
+            doHardReset = false;
         }
-
-        gameFuncs.Update(&gameMemory);
+        
+        gameFuncs.Update(gameMemory);
     }
 
 cleanup:
