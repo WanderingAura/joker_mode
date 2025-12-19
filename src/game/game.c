@@ -43,7 +43,7 @@ SOC_EXPORT void soc_GameMemoryInit(soc_GameMemory* memory)
     memset(memory, 0, sizeof(soc_GameMemory));
     memory->lonelyRec = (Rectangle){300,300, 100, 100};
     memory->textures[TextureGrass] = LoadTexture("assets/grass.png");
-    memory->textures[TextureGuy] = LoadTexture("res/bloke.png");
+    memory->textures[TextureGuy] = LoadTexture("assets/bloke.png");
     memory->efs_entitiyPool = initPool();
 
 
