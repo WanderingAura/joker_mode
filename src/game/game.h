@@ -3,12 +3,14 @@
 #include <raylib.h>
 
 #include "core_tilemap.h"
+#include "efs_entity.h"
 
 typedef struct {
     Rectangle lonelyRec;
     float timeSinceLastFrame;
     core_Tilemap tilemap;
     Texture2D textures[256];
+    efs_EntityPool* efs_entitiyPool;
 } soc_GameMemory;
 
 typedef void soc_FuncGameModuleInit(soc_GameMemory* memory);

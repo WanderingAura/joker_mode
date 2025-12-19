@@ -13,4 +13,4 @@ target_link_libraries(society PRIVATE based efs vos game_core)
 joker_add_lib(soc SHARED game.c)
 joker_target_link_raylib(soc)
 
-target_link_libraries(soc PRIVATE based game_core)
+target_link_libraries(soc PRIVATE based game_core efs)

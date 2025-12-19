@@ -2,68 +2,67 @@
 #include <stdio.h>
 #include <string.h>
 
-#define entityPoolSize 100
 
-int freeHead = 0;
-int activeHead = -1;
-    
-int addToPool(efs_Entity* pool, efs_Entity entity) {
-    int nextFreeHead = pool[freeHead].next;
+int addToPool(efs_EntityPool* entityPool, efs_Entity entity) {
+    int nextFreeHead = entityPool->entities[entityPool->freeHead].next;
     if(nextFreeHead < 0) {
         printf("Pools closed due to aids, infected line: %d\n", __LINE__);
         //ran out of space
         return -1;
     }
-    pool[nextFreeHead].prev = -1;
+    
+    entityPool->entities[nextFreeHead].prev = -1;
 
-    entity.next = activeHead;
+    entity.next = entityPool->activeHead;
     entity.prev = -1;
-    pool[activeHead].prev = freeHead;
-    pool[freeHead] = entity;
+    entityPool->entities[entityPool->activeHead].prev = entityPool->freeHead;
+    entityPool->entities[entityPool->freeHead] = entity;
 
-    activeHead = freeHead;
-    freeHead = nextFreeHead;
+    entityPool->activeHead = entityPool->freeHead;
+    entityPool->freeHead = nextFreeHead;
+
     return 0;
 }
 
-void deleteFromPool(efs_Entity* pool, int index) {
+void deleteFromPool(efs_EntityPool* entityPool, int index) {
     //collect relevant active entities
-    efs_Entity* entity = &pool[index];
+    efs_Entity* entity = &entityPool->entities[index];
     memset(&entity->props, 0, sizeof(entity->props));
     if(entity->next != -1) {
-        efs_Entity* next = &pool[entity->next];
+        efs_Entity* next = &entityPool->entities[entity->next];
         next->prev = entity->prev;
     }
     if(entity->prev != -1) {
-        efs_Entity* prev = &pool[entity->prev];    
+        efs_Entity* prev = &entityPool->entities[entity->prev];    
         prev->next = entity->next;
     } else {
-        activeHead = entity->next;
+        entityPool->activeHead = entity->next;
     }
     
     //sort out free list
-    pool[freeHead].prev = index;
-    entity->next = freeHead;
+    entityPool->entities[entityPool->freeHead].prev = index;
+    entity->next = entityPool->freeHead;
     entity->prev = -1;
-    freeHead = index;
+    entityPool->freeHead = index;
 }
 
-efs_Entity* initPool() {
-    efs_Entity* entityPool = MemAlloc(sizeof(efs_Entity)*entityPoolSize);
-    entityPool[0] = (efs_Entity){ 0 };
-    entityPool[0].next = 1;
-    entityPool[0].prev = -1;
-    for(int i = 1; i < entityPoolSize - 1; i ++) {
-        entityPool[i] = (efs_Entity){ 0 };
-        entityPool[i].next = i+1;
-        entityPool[i].prev = i-1;
-    }
-    entityPool[entityPoolSize-1].prev = entityPoolSize-2;
-    entityPool[entityPoolSize-1].next = -1;
+efs_EntityPool* initPool() {
+    efs_Entity* entitites = MemAlloc(sizeof(efs_Entity)*entityPoolSize);
 
-    int poolNextFree = 1;
-    int poolFirstUsed = 0;
+    efs_EntityPool* entityPool = MemAlloc(sizeof(efs_EntityPool));
+    *entityPool = (efs_EntityPool){ .freeHead = 0, .activeHead = -1, .entities = entitites };
     
+    entitites[0] = (efs_Entity){ 0 };
+    entitites[0].next = 1;
+    entitites[0].prev = -1;
+    for(int i = 1; i < entityPoolSize - 1; i ++) {
+        entitites[i] = (efs_Entity){ 0 };
+        entitites[i].next = i+1;
+        entitites[i].prev = i-1;
+    }
+    entitites[entityPoolSize-1].prev = entityPoolSize-2;
+    entitites[entityPoolSize-1].next = -1;
+
     return entityPool;
 }
       

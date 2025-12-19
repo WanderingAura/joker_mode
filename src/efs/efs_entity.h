@@ -3,6 +3,7 @@
 #include "based_basic.h"
 #include <assert.h>
 
+#define entityPoolSize 100
 #define PROPERTY_MAX_NUM 256
 #define NUM_PROPS_IN_U64 64
 static_assert(PROPERTY_MAX_NUM % NUM_PROPS_IN_U64 == 0, "needs to be a multiple of 64");
@@ -21,12 +22,21 @@ typedef struct efs_Entity {
     int prev;
     Rectangle pos;
     Vector2 vel;
+    float moveSpeed;
     int health;
     struct efs_Entity* following; // watch out for dangling references
     Texture2D texture;
 } efs_Entity;
 
+typedef struct efs_EntityPool {
+    int freeHead;
+    int activeHead;
+    efs_Entity* entities;
+} efs_EntityPool;
+
+efs_EntityPool* initPool();
+void deleteFromPool(efs_EntityPool* pool, int index);
+int addToPool(efs_EntityPool* pool, efs_Entity entity);
 
 bool efs_EntityHasProperty(efs_Entity const* entity, efs_PropertyType prop);
-
 void efs_SetEntityProperty(efs_Entity* entity, efs_PropertyType prop);
