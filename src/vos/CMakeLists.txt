@@ -5,7 +5,7 @@ target_include_directories(vos PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 if (UNIX)
     target_sources(vos PRIVATE vos_linux.c)
-elseif(MSVC)
+elseif(WIN32)
     target_sources(vos PRIVATE vos_windows.c)
 else()
     message(FATAL_ERROR "Unsupported compiler/os")

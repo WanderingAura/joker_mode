@@ -11,7 +11,7 @@
 #elif defined(_WIN32)
   #define SOC_EXPORT __declspec(dllexport)
 #else
-#error OS/Compiler unsupported
+  #error OS/Compiler unsupported
 #endif
 
 #define COLOR_SET_SIZE 3
@@ -45,6 +45,7 @@ SOC_EXPORT void soc_GameMemoryInit(soc_GameMemory* memory)
     memory->textures[TextureGrass] = LoadTexture("assets/grass.png");
     memory->textures[TextureGuy] = LoadTexture("assets/bloke.png");
     memory->efs_entitiyPool = initPool();
+    memory->camera = (Camera2D){0};
 
 
     //DEFINE guy
@@ -63,6 +64,11 @@ SOC_EXPORT void soc_GameMemoryInit(soc_GameMemory* memory)
     guy.texture = memory->textures[TextureGuy];
     //Add guy to pool
     addToPool(memory->efs_entitiyPool, guy);
+
+    memory->camera.target = (Vector2){guy.pos.x, guy.pos.y};
+    memory->camera.zoom = 1.0f;
+    memory->camera.offset = (Vector2){GetScreenWidth()/2.0f, GetScreenHeight()/2.0f};
+
 }
 
 SOC_EXPORT void soc_GameUpdate(soc_GameMemory* memory)
@@ -90,6 +96,7 @@ SOC_EXPORT void soc_GameUpdate(soc_GameMemory* memory)
                 }
                 entity->vel = Vector2Normalize(entity->vel);
                 entity->vel = Vector2Scale(entity->vel, entity->moveSpeed);
+                memory->camera.target = (Vector2){entity->pos.x, entity->pos.y};
 
             }
             if(efs_EntityHasProperty(entity, efs_prop_CanMove)) {
@@ -116,15 +123,19 @@ SOC_EXPORT void soc_GameUpdate(soc_GameMemory* memory)
     BeginDrawing();
     {
         ClearBackground(BLACK);
-        DrawRectangleRec(memory->lonelyRec, colorSet[colorIdx%COLOR_SET_SIZE]);
-        core_TilemapDraw(&memory->tilemap);
-        //render entities
-        int index = memory->efs_entitiyPool->activeHead;
-        while(index >= 0) {
-            efs_Entity* entity = &memory->efs_entitiyPool->entities[index];
-            DrawTexturePro(entity->texture, (Rectangle){0.0f, 0.0f, 64.0f, 64.0f}, entity->pos, (Vector2){0.0f, 0.0f}, 0, WHITE);
-            index = entity->next;
+        BeginMode2D(memory->camera);
+        {
+            DrawRectangleRec(memory->lonelyRec, colorSet[colorIdx%COLOR_SET_SIZE]);
+            core_TilemapDraw(&memory->tilemap);
+            //render entities
+            int index = memory->efs_entitiyPool->activeHead;
+            while(index >= 0) {
+                efs_Entity* entity = &memory->efs_entitiyPool->entities[index];
+                DrawTexturePro(entity->texture, (Rectangle){0.0f, 0.0f, 64.0f, 64.0f}, entity->pos, (Vector2){0.0f, 0.0f}, 0, WHITE);
+                index = entity->next;
+            }
         }
+        EndMode2D();
     }
     EndDrawing();
 

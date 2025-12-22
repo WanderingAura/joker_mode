@@ -11,6 +11,7 @@ typedef struct {
     core_Tilemap tilemap;
     Texture2D textures[256];
     efs_EntityPool* efs_entitiyPool;
+    Camera2D camera;
 } soc_GameMemory;
 
 typedef void soc_FuncGameModuleInit(soc_GameMemory* memory);
