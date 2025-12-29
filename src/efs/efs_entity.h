@@ -14,16 +14,27 @@ typedef enum {
     efs_prop_HasHealth,
     efs_prop_FollowsOther,
     efs_prop_PlayerControlled,
+    efs_prop_HasLifetime,
+    efs_prop_HasRotation,
+    efs_prop_Collidable
 } efs_PropertyType;
 
 typedef struct efs_Entity {
     efs_Properties props;
     int next;
     int prev;
-    Rectangle pos;
+    union {
+        Vector2 pos;
+        Rectangle rect;
+    };
     Vector2 vel;
+    float timeSinceLastSpawn;
+    float lifetime;
+    float spawnTime;
+    float rotationSpeed;
     float moveSpeed;
     int health;
+    struct efs_Entity* entityToSpawn;
     struct efs_Entity* following; // watch out for dangling references
     Texture2D texture;
 } efs_Entity;
@@ -34,9 +45,9 @@ typedef struct efs_EntityPool {
     efs_Entity* entities;
 } efs_EntityPool;
 
-efs_EntityPool* initPool();
-void deleteFromPool(efs_EntityPool* pool, int index);
-int addToPool(efs_EntityPool* pool, efs_Entity entity);
+efs_EntityPool* efs_PoolInit();
+void efs_PoolDelete(efs_EntityPool* pool, int index);
+int efs_PoolAdd(efs_EntityPool* pool, efs_Entity entity);
 
 bool efs_EntityHasProperty(efs_Entity const* entity, efs_PropertyType prop);
-void efs_SetEntityProperty(efs_Entity* entity, efs_PropertyType prop);
+void efs_EntitySetProperty(efs_Entity* entity, efs_PropertyType prop);

@@ -20,6 +20,5 @@ void core_TilemapDraw(core_Tilemap* tilemap)
 
     // DrawTextureV(tilemap->texture, tilemap->pos, WHITE);
     Rectangle tileRect = {tilemap->pos.x, tilemap->pos.y, tilemap->tileWidth * tilemap->columns, tilemap->tileHeight * tilemap->rows};
-    Rectangle targetRect = {0,0, 800, 800};
-    DrawTexturePro(tilemap->texture, tileRect, targetRect, (Vector2){0,0}, 0.0f, WHITE);
+    DrawTexturePro(tilemap->texture, tileRect, tileRect, (Vector2){0,0}, 0.0f, WHITE);
 }

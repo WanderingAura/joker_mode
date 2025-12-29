@@ -1,4 +1,4 @@
-#include "game.h"
+#include "game_api.h"
 #include "raylib.h"
 #include "vos.h"
 #include <assert.h>
@@ -97,6 +97,11 @@ int main(void)
 
         bool dllModifying = false;
 
+        // NOTE: this is used for a hard reset of the game memory but if the game memory's structure changes between
+        // reloads it might cause a crash before we have the opportunity to hard reset. we may need another mechanism:
+        // - add a keybind to pause all game updates so that we can do a hard reset while the game is paused
+        // - change the build and hot-reload logic so that hot-reload only happens if a certain build flag is set.
+        //   we can have a dummy file for this where this file only updates when we want a hot-reload.
         if (GetKeyPressed() == KEY_F5)
         {
             doHardReset = true;
@@ -110,10 +115,9 @@ int main(void)
             dllLastModTime = dllCurModTime;
         }
 
-        // if the dll has done being modified by the compiler
         if ((dllWasModifying && !dllModifying) || doHardReset)
         {
-            BSD_INF("Game DLL has been modified. Performing hot reload...");
+            BSD_INF("Performing hot reload...");
             dllWasModifying = false;
             s64 ret = vos_DLLUnload(gameDLL);
             if (ret != 0)
