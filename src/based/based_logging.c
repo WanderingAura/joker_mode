@@ -50,6 +50,11 @@ void bsd_log(FILE* logFile, bsd_LogLevel level, int line, const char* restrict f
 
     va_end(args);
 
+    if (n >= curLineMax)
+    {
+        BSD_WARN("the following log message has been truncated because it's above %d characters", LOG_LINE_LEN_MAX);
+    }
+
     n = fprintf(logFile, "%s\n", logBuf);
 #ifdef BSD_FLUSH_ON_LOG
     fflush(logFile);

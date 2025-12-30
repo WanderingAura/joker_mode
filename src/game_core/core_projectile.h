@@ -14,3 +14,5 @@ typedef enum ProjectileType
 
 void ProjectileSystemInit(soc_GameMemory* memory);
 efs_Entity ProjectileEntityCreate(ProjectileType type, Vector2 pos, Vector2 vel);
+
+// TODO: 1. make a projectile spawner entity 2. make projectiles collide with the player

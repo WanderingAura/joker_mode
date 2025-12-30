@@ -1,7 +1,7 @@
-#include <assert.h>
 #include <raylib.h>
 
 #include "core_tilemap.h"
+#include "based_basic.h"
 
 void core_TilemapInit(core_Tilemap* tilemap, Vector2 pos, u32 columns, u32 rows, Texture2D texture)
 {
@@ -16,7 +16,7 @@ void core_TilemapInit(core_Tilemap* tilemap, Vector2 pos, u32 columns, u32 rows,
 
 void core_TilemapDraw(core_Tilemap* tilemap)
 {
-    assert(tilemap);
+    DBG_ASSERT_MSG(tilemap, "The tilemap being drawn is NULL!");
 
     // DrawTextureV(tilemap->texture, tilemap->pos, WHITE);
     Rectangle tileRect = {tilemap->pos.x, tilemap->pos.y, tilemap->tileWidth * tilemap->columns, tilemap->tileHeight * tilemap->rows};

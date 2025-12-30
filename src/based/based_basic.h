@@ -1,6 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include <stddef.h>
+#include "based_logging.h"
 
 /* ==== BASIC TYPES ==== */
 typedef uint8_t u8;
@@ -29,4 +30,16 @@ typedef s64 b64;
 # define MAYBE_UNUSED __attribute__((unused))
 #else
 # define MAYBE_UNUSED
+#endif
+
+#ifndef NDEBUG
+#define DBG_ASSERT_MSG(cond, msg, ...) \
+    do { \
+        if (!(cond)) \
+        { \
+            BSD_CRIT(msg __VA_OPT__(,) __VA_ARGS__); \
+        } \
+    } while (0)
+#else
+#define DBG_ASSERT_MSG(cond, msg)
 #endif
