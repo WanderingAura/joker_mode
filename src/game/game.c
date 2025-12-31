@@ -29,11 +29,12 @@ SOC_EXPORT void soc_GameModuleInit(soc_GameMemory* memory)
 
     ProjectileSystemInit(memory);
 
-    efs_Entity proj = ProjectileEntityCreate(ProjectileNormal, (Vector2){GetScreenWidth() / 2.0f,GetScreenHeight()/ 2.0f}, (Vector2){1.0f, 0.0f});
-    efs_PoolAdd(memory->efs_entityPool, proj);
+    // efs_Entity proj = ProjectileEntityCreate(ProjectileNormal, (Vector2){GetScreenWidth() / 2.0f,GetScreenHeight()/ 2.0f}, (Vector2){1.0f, 0.0f});
+    // efs_PoolAdd(memory->efs_entityPool, proj);
 
-    proj = ProjectileEntityCreate(ProjectileCircle, (Vector2){GetScreenWidth() / 2.0f,GetScreenHeight()/ 2.0f}, (Vector2){1.0f, 0.0f});
-    efs_PoolAdd(memory->efs_entityPool, proj);
+    Vector2 middleOfScreen = {GetScreenWidth()/2.0f, GetScreenHeight()/2.0f};
+    efs_Entity spawner = ProjectileSpawnerCreate(SpawnerNormal, middleOfScreen, (Vector2){1.0f, 0.0f}, ProjectileNormal);
+    efs_PoolAdd(memory->efs_entityPool, spawner);
 
     core_TilemapInit(&memory->tilemap, (Vector2){0,0}, 15, 10, memory->textures[TextureGrass]);
 }
@@ -55,8 +56,8 @@ SOC_EXPORT void soc_GameMemoryInit(soc_GameMemory* memory)
     efs_EntitySetProperty(&guy, efs_prop_PlayerControlled);
     efs_EntitySetProperty(&guy, efs_prop_HasHealth);
     guy.health = 100;
-    guy.vel.x = 0.0f;
-    guy.vel.y = 0.0f;
+    guy.dir.x = 0.0f;
+    guy.dir.y = 0.0f;
     guy.rect.x = GetScreenWidth() / 2.0f;
     guy.rect.y = GetScreenHeight() / 2.0f;
     guy.rect.height = 64.0f;
@@ -76,36 +77,36 @@ SOC_EXPORT void soc_GameMemoryInit(soc_GameMemory* memory)
 
 SOC_EXPORT void soc_GameUpdate(soc_GameMemory* memory)
 {
-
-    //Entitiy updates
+    //Entity updates
     {
         int index = memory->efs_entityPool->activeHead;
         while(index >= 0) {
             efs_Entity* entity = &memory->efs_entityPool->entities[index];
+            int nextIndex = entity->next;
             if(efs_EntityHasProperty(entity, efs_prop_PlayerControlled)) {
-                entity->vel.x = 0.0f;
-                entity->vel.y = 0.0f;
+                entity->dir.x = 0.0f;
+                entity->dir.y = 0.0f;
                 if(IsKeyDown(KEY_W)) {
-                    entity->vel.y -= 1.0f;
+                    entity->dir.y -= 1.0f;
                 };
                 if(IsKeyDown(KEY_S)) {
-                    entity->vel.y += 1.0f;
+                    entity->dir.y += 1.0f;
                 }
                 if(IsKeyDown(KEY_A)) {
-                    entity->vel.x -= 1.0f;
+                    entity->dir.x -= 1.0f;
                 }
                 if(IsKeyDown(KEY_D)) {
-                    entity->vel.x += 1.0f;
+                    entity->dir.x += 1.0f;
                 }
-                entity->vel = Vector2Normalize(entity->vel);
+                entity->dir = Vector2Normalize(entity->dir);
                 memory->camera.target = entity->pos;
             }
             if (efs_EntityHasProperty(entity, efs_prop_HasRotation))
             {
-                entity->vel = Vector2Rotate(entity->vel, entity->rotationSpeed * GetFrameTime());
+                entity->dir = Vector2Rotate(entity->dir, entity->rotationSpeed * GetFrameTime());
             }
             if(efs_EntityHasProperty(entity, efs_prop_CanMove)) {
-                Vector2 entityStep = Vector2Scale(entity->vel, entity->moveSpeed * GetFrameTime());
+                Vector2 entityStep = Vector2Scale(entity->dir, entity->moveSpeed * GetFrameTime());
                 entity->pos.x += entityStep.x;
                 entity->pos.y += entityStep.y;
             }
@@ -117,7 +118,23 @@ SOC_EXPORT void soc_GameUpdate(soc_GameMemory* memory)
                     efs_PoolDelete(memory->efs_entityPool, index);
                 }
             }
-            index = entity->next;
+            if (efs_EntityHasProperty(entity, efs_prop_Spawner))
+            {
+                entity->timeSinceLastSpawn += GetFrameTime();
+                if (entity->timeSinceLastSpawn >= entity->spawnTime)
+                {
+                    entity->timeSinceLastSpawn = 0;
+                    efs_Entity spawned = {};
+                    memcpy(&spawned, entity->entityToSpawn, sizeof(efs_Entity));
+                    spawned.dir = entity->spawnedEntityDir;
+                    // TODO: here we need an extra value stored in the entity to indicate spawn offset
+                    // TODO: we really need a mechanism to set a rotation value so that the entity
+                    // can be at different orientations...
+                    spawned.pos = entity->pos;
+                    efs_PoolAdd(memory->efs_entityPool, spawned);
+                }
+            }
+            index = nextIndex;
         }
     }
 

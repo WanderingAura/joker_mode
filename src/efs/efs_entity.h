@@ -16,7 +16,8 @@ typedef enum {
     efs_prop_PlayerControlled,
     efs_prop_HasLifetime,
     efs_prop_HasRotation,
-    efs_prop_Collidable
+    efs_prop_Collidable,
+    efs_prop_Spawner,
 } efs_PropertyType;
 
 typedef struct efs_Entity {
@@ -27,7 +28,7 @@ typedef struct efs_Entity {
         Vector2 pos;
         Rectangle rect;
     };
-    Vector2 vel;
+    Vector2 dir;
     float timeSinceLastSpawn;
     float lifetime;
     float spawnTime;
@@ -35,6 +36,7 @@ typedef struct efs_Entity {
     float moveSpeed;
     int health;
     struct efs_Entity* entityToSpawn;
+    Vector2 spawnedEntityDir;
     struct efs_Entity* following; // watch out for dangling references
     Texture2D texture;
 } efs_Entity;

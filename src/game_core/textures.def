@@ -1,3 +1,4 @@
 _TextureType(Grass)
 _TextureType(Guy)
 _TextureType(Projectile)
+_TextureType(ProjectileSpawner)

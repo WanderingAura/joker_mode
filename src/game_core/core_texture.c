@@ -1,6 +1,7 @@
 #include "core_texture.h"
 #include "based_basic.h"
 #include "based_logging.h"
+#include "core_game_memory.h"
 #include "raylib.h"
 
 void core_TexturesInit(soc_GameMemory* memory)
@@ -18,4 +19,5 @@ void core_TexturesInit(soc_GameMemory* memory)
     memory->textures[TextureGrass] = LoadTexture("assets/grass.png");
     memory->textures[TextureGuy] = LoadTexture("assets/bloke.png");
     memory->textures[TextureProjectile] = memory->textures[TextureGuy]; // TODO: make an actual texture for the projectile
+    memory->textures[TextureProjectileSpawner] = memory->textures[TextureGuy];
 }
