@@ -8,6 +8,6 @@ soc_GameMemory* core_GameMemoryGet()
 
 void core_GameMemorySet(soc_GameMemory* memory)
 {
-    assert(GAME_MEMORY == NULL); // if this assertion fails there's likely a memory leak
+    BSD_INF("Setting game memory");
     GAME_MEMORY = memory;
 }

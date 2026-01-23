@@ -2,22 +2,9 @@
 #include <raylib.h>
 #include "efs_entity.h"
 #include "core_game_memory.h"
+#include "core_entity_types.h"
 
-typedef enum ProjectileType
-{
-    ProjectileNormal,
-    ProjectileCircle,
-    ProjectileNormalSpeedsUp,
 
-    ProjectileTypeCount,
-} ProjectileType;
-
-typedef enum SpawnerType
-{
-    SpawnerNormal,
-
-    SpawnerTypeCount,
-} SpawnerType;
 
 void ProjectileSystemInit(soc_GameMemory* memory);
 efs_Entity ProjectileEntityCreate(ProjectileType type, Vector2 pos, Vector2 dir);

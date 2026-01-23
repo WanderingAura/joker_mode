@@ -1,3 +1,4 @@
+#include <asm-generic/errno.h>
 #include <raylib.h>
 #include <string.h>
 #include <raymath.h>
@@ -32,15 +33,13 @@ SOC_EXPORT void soc_GameModuleInit(soc_GameMemory* memory)
     // efs_Entity proj = ProjectileEntityCreate(ProjectileNormal, (Vector2){GetScreenWidth() / 2.0f,GetScreenHeight()/ 2.0f}, (Vector2){1.0f, 0.0f});
     // efs_PoolAdd(memory->efs_entityPool, proj);
 
-    Vector2 middleOfScreen = {GetScreenWidth()/2.0f, GetScreenHeight()/2.0f};
-    efs_Entity spawner = ProjectileSpawnerCreate(SpawnerNormal, middleOfScreen, (Vector2){1.0f, 0.0f}, ProjectileNormal);
-    efs_PoolAdd(memory->efs_entityPool, spawner);
 
     core_TilemapInit(&memory->tilemap, (Vector2){0,0}, 15, 10, memory->textures[TextureGrass]);
 }
 
 SOC_EXPORT void soc_GameMemoryInit(soc_GameMemory* memory)
 {
+    core_GameMemorySet(memory);
     // TODO: change this to be dynamic based on something??
     bsd_SetLogLevel(bsd_LogLevel_Debug);
     memset(memory, 0, sizeof(soc_GameMemory));
@@ -70,6 +69,14 @@ SOC_EXPORT void soc_GameMemoryInit(soc_GameMemory* memory)
     memory->camera.offset = (Vector2){GetScreenWidth()/2.0f, GetScreenHeight()/2.0f};
 
     efs_PoolAdd(memory->efs_entityPool, guy);
+
+    // store a pointer to the player so that it's easily accessed
+    memory->player = &memory->efs_entityPool->entities[memory->efs_entityPool->activeHead];
+
+    ProjectileSystemInit(memory);
+    Vector2 middleOfScreen = {GetScreenWidth()/2.0f, GetScreenHeight()/2.0f};
+    efs_Entity spawner = ProjectileSpawnerCreate(SpawnerNormal, middleOfScreen, (Vector2){1.0f, 0.0f}, ProjectileNormal);
+    efs_PoolAdd(memory->efs_entityPool, spawner);
 
 
     BSD_INF("Game memory initialised!");
@@ -134,6 +141,28 @@ SOC_EXPORT void soc_GameUpdate(soc_GameMemory* memory)
                     efs_PoolAdd(memory->efs_entityPool, spawned);
                 }
             }
+
+            // update for damaging player
+            if (!efs_EntityHasProperty(memory->player, efs_prop_TempInvincible)
+                && efs_EntityHasProperty(entity, efs_prop_DamagesPlayer))
+            {
+                if (memory->player && CheckCollisionRecs(entity->rect, memory->player->rect))
+                {
+                    // this projectile has collided with player
+                    efs_EntitySetProperty(memory->player, efs_prop_TempInvincible);
+                    memory->player->invincibleTimer = 1.0f;
+                    memory->player->health -= 3;
+                }
+            }
+
+            if (efs_EntityHasProperty(entity, efs_prop_TempInvincible))
+            {
+                entity->invincibleTimer -= GetFrameTime();
+                if (entity->invincibleTimer < 0)
+                {
+                    efs_EntityUnsetProperty(entity, efs_prop_TempInvincible);
+                }
+            }
             index = nextIndex;
         }
     }
@@ -167,6 +196,8 @@ SOC_EXPORT void soc_GameUpdate(soc_GameMemory* memory)
             }
         }
         EndMode2D();
+
+        DrawText(TextFormat("Player Health: %d", memory->player->health), 10, 10, 10, RED);
     }
     EndDrawing();
 

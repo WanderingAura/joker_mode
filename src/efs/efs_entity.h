@@ -17,7 +17,9 @@ typedef enum {
     efs_prop_HasLifetime,
     efs_prop_HasRotation,
     efs_prop_Collidable,
+    efs_prop_DamagesPlayer,
     efs_prop_Spawner,
+    efs_prop_TempInvincible
 } efs_PropertyType;
 
 typedef struct efs_Entity {
@@ -34,6 +36,7 @@ typedef struct efs_Entity {
     float spawnTime;
     float rotationSpeed;
     float moveSpeed;
+    float invincibleTimer;
     int health;
     struct efs_Entity* entityToSpawn;
     Vector2 spawnedEntityDir;
@@ -53,3 +56,4 @@ int efs_PoolAdd(efs_EntityPool* pool, efs_Entity entity);
 
 bool efs_EntityHasProperty(efs_Entity const* entity, efs_PropertyType prop);
 void efs_EntitySetProperty(efs_Entity* entity, efs_PropertyType prop);
+void efs_EntityUnsetProperty(efs_Entity *entity, efs_PropertyType prop);

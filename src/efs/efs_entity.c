@@ -81,6 +81,11 @@ void efs_EntitySetProperty(efs_Entity *entity, efs_PropertyType prop) {
     entity->props[prop/NUM_PROPS_IN_U64] |= (1 << (prop % NUM_PROPS_IN_U64));
 }
 
+void efs_EntityUnsetProperty(efs_Entity *entity, efs_PropertyType prop) {
+    assert(entity != NULL);
+    entity->props[prop/NUM_PROPS_IN_U64] &= ~(1 << (prop % NUM_PROPS_IN_U64));
+}
+
 void efs_EntitySetProperties(efs_Entity* entity, efs_PropertyType* props, u32 numProps)
 {
     assert(entity != NULL);
