@@ -14,3 +14,4 @@ typedef struct {
 
 void core_TilemapInit(core_Tilemap* tilemap, Vector2 pos, u32 columns, u32 rows, Texture2D texture);
 void core_TilemapDraw(core_Tilemap* tilemap);
+void core_TilemapUpdate(core_Tilemap* tilemap, const Camera2D* cam);

@@ -102,7 +102,7 @@ int main(void)
         // - add a keybind to pause all game updates so that we can do a hard reset while the game is paused
         // - change the build and hot-reload logic so that hot-reload only happens if a certain build flag is set.
         //   we can have a dummy file for this where this file only updates when we want a hot-reload.
-        if (GetKeyPressed() == KEY_F5)
+        if (IsKeyPressed(KEY_F5))
         {
             doHardReset = true;
         }

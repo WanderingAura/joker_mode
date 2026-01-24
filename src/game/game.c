@@ -30,7 +30,7 @@ SOC_EXPORT void soc_GameModuleInit(soc_GameMemory* memory)
     // efs_PoolAdd(memory->efs_entityPool, proj);
 
 
-    core_TilemapInit(&memory->tilemap, (Vector2){0,0}, 15, 10, memory->textures[TextureGrass]);
+    core_TilemapInit(&memory->tilemap, (Vector2){0,0}, 16, 12, memory->textures[TextureGrass]);
 }
 
 void InitDemoLevel(soc_GameMemory* memory)
@@ -166,6 +166,8 @@ void MainGameUpdate(soc_GameMemory* memory)
         }
     }
 
+    core_TilemapUpdate(&memory->tilemap, &memory->camera);
+
     BeginDrawing();
     {
         ClearBackground(BLACK);
@@ -183,6 +185,7 @@ void MainGameUpdate(soc_GameMemory* memory)
         EndMode2D();
 
         DrawText(TextFormat("Player Health: %d", memory->player->health), 10, 10, 10, RED);
+        DrawFPS(GetScreenWidth()-20, 0);
     }
     EndDrawing();
 }
@@ -192,15 +195,11 @@ void TitleScreenUpdate(soc_GameMemory* memory)
     int screenWidth = GetScreenWidth();
     int screenHeight = GetScreenHeight();
 
-    int key;
-    while (key = GetKeyPressed())
+    int key = GetKeyPressed();
+    if (key != 0)
     {
-        if (key != 0)
-        {
-            memory->menuState = MenuState_MainGame;
-            InitDemoLevel(memory);
-            break;
-        }
+        memory->menuState = MenuState_MainGame;
+        InitDemoLevel(memory);
     }
 
     BeginDrawing();
