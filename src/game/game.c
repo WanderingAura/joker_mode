@@ -199,6 +199,7 @@ void TitleScreenUpdate(soc_GameMemory* memory)
         {
             memory->menuState = MenuState_MainGame;
             InitDemoLevel(memory);
+            break;
         }
     }
 
