@@ -4,6 +4,7 @@
 #include "core_tilemap.h"
 #include "core_texture_types.h"
 #include "core_entity_types.h"
+#include "core_menu_state.h"
 
 typedef struct
 {
@@ -20,6 +21,7 @@ typedef struct {
     efs_Entity* player;
     Camera2D camera;
     EntityTemplateTables entityTemplates;
+    GameMenuState menuState;
 } soc_GameMemory;
 
 soc_GameMemory* core_GameMemoryGet();

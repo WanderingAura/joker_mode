@@ -5,6 +5,8 @@
 
 #include "based_basic.h"
 #include "based_logging.h"
+#include "core_game_memory.h"
+#include "core_menu_state.h"
 #include "core_texture.h"
 #include "core_tilemap.h"
 #include "core_projectile.h"
@@ -18,15 +20,9 @@
   #error OS/Compiler unsupported
 #endif
 
-#define COLOR_SET_SIZE 3
-static Color colorSet[COLOR_SET_SIZE];
-
 SOC_EXPORT void soc_GameModuleInit(soc_GameMemory* memory)
 {
     core_GameMemorySet(memory);
-    colorSet[0] = WHITE;
-    colorSet[1] = ORANGE;
-    colorSet[2] = BLUE;
 
     ProjectileSystemInit(memory);
 
@@ -37,18 +33,8 @@ SOC_EXPORT void soc_GameModuleInit(soc_GameMemory* memory)
     core_TilemapInit(&memory->tilemap, (Vector2){0,0}, 15, 10, memory->textures[TextureGrass]);
 }
 
-SOC_EXPORT void soc_GameMemoryInit(soc_GameMemory* memory)
+void InitDemoLevel(soc_GameMemory* memory)
 {
-    core_GameMemorySet(memory);
-    // TODO: change this to be dynamic based on something??
-    bsd_SetLogLevel(bsd_LogLevel_Debug);
-    memset(memory, 0, sizeof(soc_GameMemory));
-    memory->lonelyRec = (Rectangle){300,300, 100, 100};
-    core_TexturesInit(memory);
-    memory->camera = (Camera2D){0};
-    memory->efs_entityPool = efs_PoolInit();
-
-
     //DEFINE guy
     efs_Entity guy = { 0 };
     efs_EntitySetProperty(&guy, efs_prop_CanMove);
@@ -77,12 +63,25 @@ SOC_EXPORT void soc_GameMemoryInit(soc_GameMemory* memory)
     Vector2 middleOfScreen = {GetScreenWidth()/2.0f, GetScreenHeight()/2.0f};
     efs_Entity spawner = ProjectileSpawnerCreate(SpawnerNormal, middleOfScreen, (Vector2){1.0f, 0.0f}, ProjectileNormal);
     efs_PoolAdd(memory->efs_entityPool, spawner);
+}
 
+SOC_EXPORT void soc_GameMemoryInit(soc_GameMemory* memory)
+{
+    core_GameMemorySet(memory);
+    // TODO: change this to be dynamic based on something??
+    bsd_SetLogLevel(bsd_LogLevel_Debug);
+    memset(memory, 0, sizeof(soc_GameMemory));
+    memory->lonelyRec = (Rectangle){300,300, 100, 100};
+    core_TexturesInit(memory);
+    memory->camera = (Camera2D){0};
+    memory->efs_entityPool = efs_PoolInit();
+
+    memory->menuState = MenuState_Title;
 
     BSD_INF("Game memory initialised!");
 }
 
-SOC_EXPORT void soc_GameUpdate(soc_GameMemory* memory)
+void MainGameUpdate(soc_GameMemory* memory)
 {
     //Entity updates
     {
@@ -167,25 +166,11 @@ SOC_EXPORT void soc_GameUpdate(soc_GameMemory* memory)
         }
     }
 
-    static u32 colorIdx = 0; // NOTE: temporary scuffed code
-    if (memory->timeSinceLastFrame > 1.0f)
-    {
-        colorIdx++;
-        memory->timeSinceLastFrame = 0.0f;
-    }
-
-    memory->lonelyRec.height += 1;
-    if (memory->lonelyRec.height > 100)
-    {
-        memory->lonelyRec.height = 50;
-    }
-
     BeginDrawing();
     {
         ClearBackground(BLACK);
         BeginMode2D(memory->camera);
         {
-            DrawRectangleRec(memory->lonelyRec, colorSet[colorIdx%COLOR_SET_SIZE]);
             core_TilemapDraw(&memory->tilemap);
             //render entities
             int index = memory->efs_entityPool->activeHead;
@@ -200,6 +185,64 @@ SOC_EXPORT void soc_GameUpdate(soc_GameMemory* memory)
         DrawText(TextFormat("Player Health: %d", memory->player->health), 10, 10, 10, RED);
     }
     EndDrawing();
+}
 
-    memory->timeSinceLastFrame += GetFrameTime();
+void TitleScreenUpdate(soc_GameMemory* memory)
+{
+    int screenWidth = GetScreenWidth();
+    int screenHeight = GetScreenHeight();
+
+    int key;
+    while (key = GetKeyPressed())
+    {
+        if (key != 0)
+        {
+            memory->menuState = MenuState_MainGame;
+            InitDemoLevel(memory);
+        }
+    }
+
+    BeginDrawing();
+        DrawRectangle(0, 0, screenWidth, screenHeight, GREEN);
+        DrawText("TITLE SCREEN", 20, 20, 40, DARKGREEN);
+        DrawText("PRESS ANY KEY TO START", 120, 220, 20, DARKGREEN);
+    EndDrawing();
+}
+
+void GameoverScreenUpdate(soc_GameMemory* memory)
+{
+    int screenWidth = GetScreenWidth();
+    int screenHeight = GetScreenHeight();
+
+    int key = GetKeyPressed();
+    if (key != 0)
+    {
+        memory->menuState = MenuState_Title;
+    }
+
+    BeginDrawing();
+        DrawRectangle(0, 0, screenWidth, screenHeight, BLUE);
+        DrawText("ENDING SCREEN", 20, 20, 40, DARKBLUE);
+        DrawText("PRESS ANY KEY TO RETURN TO TITLE SCREEN", 120, 220, 20, DARKBLUE);
+    EndDrawing();
+}
+
+SOC_EXPORT void soc_GameUpdate(soc_GameMemory* memory)
+{
+    switch (memory->menuState)
+    {
+        case MenuState_Title:
+        {
+            TitleScreenUpdate(memory);
+        } break;
+        case MenuState_MainGame:
+        {
+            MainGameUpdate(memory);
+        } break;
+        case MenuState_GameOver:
+        {
+            GameoverScreenUpdate(memory);
+        } break;
+    }
+
 }
