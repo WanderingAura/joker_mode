@@ -30,17 +30,16 @@ SOC_EXPORT void soc_GameModuleInit(soc_GameMemory* memory)
     // efs_PoolAdd(memory->efs_entityPool, proj);
 
 
-    core_TilemapInit(&memory->tilemap, (Vector2){0,0}, 16, 12, memory->textures[TextureGrass]);
 }
 
-void InitDemoLevel(soc_GameMemory* memory)
+void InitEntities(soc_GameMemory* memory)
 {
     //DEFINE guy
     efs_Entity guy = { 0 };
     efs_EntitySetProperty(&guy, efs_prop_CanMove);
     efs_EntitySetProperty(&guy, efs_prop_PlayerControlled);
     efs_EntitySetProperty(&guy, efs_prop_HasHealth);
-    guy.health = 100;
+    guy.health = 10;
     guy.dir.x = 0.0f;
     guy.dir.y = 0.0f;
     guy.rect.x = GetScreenWidth() / 2.0f;
@@ -49,32 +48,52 @@ void InitDemoLevel(soc_GameMemory* memory)
     guy.rect.width = 64.0f;
     guy.moveSpeed = 100.0f;
     guy.texture = memory->textures[TextureGuy];
+    efs_PoolAdd(&memory->efs_entityPool, guy);
+
+    // // store a pointer to the player so that it's easily accessed
+    memory->player = &memory->efs_entityPool.entities[memory->efs_entityPool.activeHead];
+
+    Vector2 middleOfScreen = {GetScreenWidth()/2.0f, GetScreenHeight()/2.0f};
+    efs_Entity spawner = ProjectileSpawnerCreate(SpawnerNormal, middleOfScreen, (Vector2){1.0f, 0.0f}, ProjectileNormal);
+    efs_PoolAdd(&memory->efs_entityPool, spawner);
+}
+
+void DrawEntities(soc_GameMemory* memory)
+{
+    // render entities
+    int index = memory->efs_entityPool.activeHead;
+    while(index >= 0) {
+        efs_Entity* entity = &memory->efs_entityPool.entities[index];
+        DrawTexturePro(entity->texture, (Rectangle){0.0f, 0.0f, entity->rect.width, entity->rect.height}, entity->rect, (Vector2){0.0f, 0.0f}, 0, WHITE);
+        index = entity->next;
+    }
+}
+
+void InitDemoLevel(soc_GameMemory* memory)
+{
+    efs_PoolInit(&memory->efs_entityPool);
+
+    core_TilemapInit(&memory->tilemap, (Vector2){0,0}, 16, 12, memory->textures[TextureGrass]);
+    InitEntities(memory);
     //Add guy to pool
-    memory->camera.target = (Vector2){guy.pos.x, guy.pos.y};
+    memory->camera.target = (Vector2){GetScreenWidth()/2.0f, GetScreenHeight()/2.0f};
     memory->camera.zoom = 1.0f;
     memory->camera.offset = (Vector2){GetScreenWidth()/2.0f, GetScreenHeight()/2.0f};
 
-    efs_PoolAdd(memory->efs_entityPool, guy);
-
-    // store a pointer to the player so that it's easily accessed
-    memory->player = &memory->efs_entityPool->entities[memory->efs_entityPool->activeHead];
-
     ProjectileSystemInit(memory);
-    Vector2 middleOfScreen = {GetScreenWidth()/2.0f, GetScreenHeight()/2.0f};
-    efs_Entity spawner = ProjectileSpawnerCreate(SpawnerNormal, middleOfScreen, (Vector2){1.0f, 0.0f}, ProjectileNormal);
-    efs_PoolAdd(memory->efs_entityPool, spawner);
 }
 
 SOC_EXPORT void soc_GameMemoryInit(soc_GameMemory* memory)
 {
+    // Updates the library's pointer to game memory
     core_GameMemorySet(memory);
+
     // TODO: change this to be dynamic based on something??
     bsd_SetLogLevel(bsd_LogLevel_Debug);
+
     memset(memory, 0, sizeof(soc_GameMemory));
-    memory->lonelyRec = (Rectangle){300,300, 100, 100};
     core_TexturesInit(memory);
     memory->camera = (Camera2D){0};
-    memory->efs_entityPool = efs_PoolInit();
 
     memory->menuState = MenuState_Title;
 
@@ -85,9 +104,9 @@ void MainGameUpdate(soc_GameMemory* memory)
 {
     //Entity updates
     {
-        int index = memory->efs_entityPool->activeHead;
+        int index = memory->efs_entityPool.activeHead;
         while(index >= 0) {
-            efs_Entity* entity = &memory->efs_entityPool->entities[index];
+            efs_Entity* entity = &memory->efs_entityPool.entities[index];
             int nextIndex = entity->next;
             if(efs_EntityHasProperty(entity, efs_prop_PlayerControlled)) {
                 entity->dir.x = 0.0f;
@@ -121,7 +140,7 @@ void MainGameUpdate(soc_GameMemory* memory)
                 entity->lifetime -= GetFrameTime();
                 if (entity->lifetime < 0)
                 {
-                    efs_PoolDelete(memory->efs_entityPool, index);
+                    efs_PoolDelete(&memory->efs_entityPool, index);
                 }
             }
             if (efs_EntityHasProperty(entity, efs_prop_Spawner))
@@ -137,7 +156,7 @@ void MainGameUpdate(soc_GameMemory* memory)
                     // TODO: we really need a mechanism to set a rotation value so that the entity
                     // can be at different orientations...
                     spawned.pos = entity->pos;
-                    efs_PoolAdd(memory->efs_entityPool, spawned);
+                    efs_PoolAdd(&memory->efs_entityPool, spawned);
                 }
             }
 
@@ -168,23 +187,22 @@ void MainGameUpdate(soc_GameMemory* memory)
 
     core_TilemapUpdate(&memory->tilemap, &memory->camera);
 
+    if (memory->player && memory->player->health <= 0)
+    {
+        memory->menuState = MenuState_GameOver;
+    }
+
     BeginDrawing();
     {
         ClearBackground(BLACK);
         BeginMode2D(memory->camera);
         {
             core_TilemapDraw(&memory->tilemap);
-            //render entities
-            int index = memory->efs_entityPool->activeHead;
-            while(index >= 0) {
-                efs_Entity* entity = &memory->efs_entityPool->entities[index];
-                DrawTexturePro(entity->texture, (Rectangle){0.0f, 0.0f, entity->rect.width, entity->rect.height}, entity->rect, (Vector2){0.0f, 0.0f}, 0, WHITE);
-                index = entity->next;
-            }
+            DrawEntities(memory);
         }
         EndMode2D();
 
-        DrawText(TextFormat("Player Health: %d", memory->player->health), 10, 10, 10, RED);
+        // DrawText(TextFormat("Player Health: %d", memory->player->health), 10, 10, 10, RED);
         DrawFPS(GetScreenWidth()-20, 0);
     }
     EndDrawing();

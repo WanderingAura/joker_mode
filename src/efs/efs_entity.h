@@ -3,7 +3,7 @@
 #include "based_basic.h"
 #include <assert.h>
 
-#define entityPoolSize 100
+#define ENTITY_POOL_SIZE 100
 #define PROPERTY_MAX_NUM 256
 #define NUM_PROPS_IN_U64 64
 static_assert(PROPERTY_MAX_NUM % NUM_PROPS_IN_U64 == 0, "needs to be a multiple of 64");
@@ -47,10 +47,10 @@ typedef struct efs_Entity {
 typedef struct efs_EntityPool {
     int freeHead;
     int activeHead;
-    efs_Entity* entities;
+    efs_Entity entities[ENTITY_POOL_SIZE];
 } efs_EntityPool;
 
-efs_EntityPool* efs_PoolInit();
+void efs_PoolInit(efs_EntityPool* pool);
 void efs_PoolDelete(efs_EntityPool* pool, int index);
 int efs_PoolAdd(efs_EntityPool* pool, efs_Entity entity);
 

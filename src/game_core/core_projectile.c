@@ -18,7 +18,7 @@ void ProjectileSystemInit(soc_GameMemory* memory)
     efs_EntitySetProperty(&memory->entityTemplates.projectile[ProjectileNormal], efs_prop_Collidable);
     efs_EntitySetProperty(&memory->entityTemplates.projectile[ProjectileNormal], efs_prop_DamagesPlayer);
     memory->entityTemplates.projectile[ProjectileNormal].lifetime = 10.0f;
-    memory->entityTemplates.projectile[ProjectileNormal].moveSpeed = 150.0f;
+    memory->entityTemplates.projectile[ProjectileNormal].moveSpeed = 300.0f;
     memory->entityTemplates.projectile[ProjectileNormal].texture = memory->textures[TextureProjectile];
     memory->entityTemplates.projectile[ProjectileNormal].rect.width = PROJ_SIZE;
     memory->entityTemplates.projectile[ProjectileNormal].rect.height = PROJ_SIZE;
@@ -38,8 +38,8 @@ void ProjectileSystemInit(soc_GameMemory* memory)
     memset(&memory->entityTemplates.spawner, 0, sizeof(memory->entityTemplates.spawner));
     efs_EntitySetProperty(&memory->entityTemplates.spawner[SpawnerNormal], efs_prop_Spawner);
     memory->entityTemplates.spawner[SpawnerNormal].texture = memory->textures[TextureProjectileSpawner];
-    memory->entityTemplates.spawner[SpawnerNormal].spawnTime = 1.0f;
-    memory->entityTemplates.spawner[SpawnerNormal].timeSinceLastSpawn = 1.0f;
+    memory->entityTemplates.spawner[SpawnerNormal].spawnTime = 0.5f;
+    memory->entityTemplates.spawner[SpawnerNormal].timeSinceLastSpawn = 0.5f;
     memory->entityTemplates.spawner[SpawnerNormal].rect.width = 32;
     memory->entityTemplates.spawner[SpawnerNormal].rect.height = 32;
 

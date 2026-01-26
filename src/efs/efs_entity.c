@@ -1,6 +1,7 @@
 #include "efs_entity.h"
 #include <stdio.h>
 #include <string.h>
+#include "based_basic.h"
 
 
 int efs_PoolAdd(efs_EntityPool* entityPool, efs_Entity entity) {
@@ -11,11 +12,16 @@ int efs_PoolAdd(efs_EntityPool* entityPool, efs_Entity entity) {
         return -1;
     }
     
+    DBG_ASSERT_MSG(nextFreeHead >= 0 && nextFreeHead <= ENTITY_POOL_SIZE, "Out of bounds");
     entityPool->entities[nextFreeHead].prev = -1;
 
     entity.next = entityPool->activeHead;
     entity.prev = -1;
-    entityPool->entities[entityPool->activeHead].prev = entityPool->freeHead;
+    if (entityPool->activeHead >= 0)
+    {
+        entityPool->entities[entityPool->activeHead].prev = entityPool->freeHead;
+    }
+    DBG_ASSERT_MSG(entityPool->freeHead >= 0 && entityPool->freeHead <= ENTITY_POOL_SIZE, "Out of bounds");
     entityPool->entities[entityPool->freeHead] = entity;
 
     entityPool->activeHead = entityPool->freeHead;
@@ -46,27 +52,24 @@ void efs_PoolDelete(efs_EntityPool* entityPool, int index) {
     entityPool->freeHead = index;
 }
 
-efs_EntityPool* efs_PoolInit() {
-    efs_Entity* entitites = MemAlloc(sizeof(efs_Entity)*entityPoolSize);
+void efs_PoolInit(efs_EntityPool* pool) {
+    memset(pool, 0, sizeof(*pool));
 
-    efs_EntityPool* entityPool = MemAlloc(sizeof(efs_EntityPool));
-    *entityPool = (efs_EntityPool){ .freeHead = 0, .activeHead = -1, .entities = entitites };
+    pool->freeHead = 0;
+    pool->activeHead = -1;
     
-    entitites[0] = (efs_Entity){ 0 };
-    entitites[0].next = 1;
-    entitites[0].prev = -1;
-    for(int i = 1; i < entityPoolSize - 1; i ++) {
-        entitites[i] = (efs_Entity){ 0 };
-        entitites[i].next = i+1;
-        entitites[i].prev = i-1;
+    pool->entities[0] = (efs_Entity){ 0 };
+    pool->entities[0].next = 1;
+    pool->entities[0].prev = -1;
+    int poolSize = ArrayCount(pool->entities);
+    for(int i = 1; i < poolSize - 1; i++) {
+        pool->entities[i] = (efs_Entity){ 0 };
+        pool->entities[i].next = i+1;
+        pool->entities[i].prev = i-1;
     }
-    entitites[entityPoolSize-1].prev = entityPoolSize-2;
-    entitites[entityPoolSize-1].next = -1;
-
-    return entityPool;
+    pool->entities[poolSize-1].prev = poolSize-2;
+    pool->entities[poolSize-1].next = -1;
 }
-      
-
 
 bool efs_EntityHasProperty(efs_Entity const* entity, efs_PropertyType prop)
 {

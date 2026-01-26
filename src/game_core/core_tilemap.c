@@ -31,6 +31,11 @@ void core_TilemapDraw(core_Tilemap* tilemap)
     DBG_ASSERT_MSG(tilemap, "The tilemap being drawn is NULL!");
 
     // DrawTextureV(tilemap->texture, tilemap->pos, WHITE);
+#if 1
     Rectangle tileRect = {tilemap->pos.x, tilemap->pos.y, tilemap->tileWidth * tilemap->columns, tilemap->tileHeight * tilemap->rows};
     DrawTexturePro(tilemap->texture, tileRect, tileRect, (Vector2){0,0}, 0.0f, WHITE);
+#else
+    Rectangle tempRect = {0,0,64,64};
+    DrawTexturePro(tilemap->texture, tempRect, tempRect, (Vector2){0,0}, 0.0f, WHITE);
+#endif
 }

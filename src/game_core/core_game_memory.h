@@ -13,11 +13,9 @@ typedef struct
 } EntityTemplateTables;
 
 typedef struct {
-    Rectangle lonelyRec;
-    float timeSinceLastFrame;
     core_Tilemap tilemap;
     Texture2D textures[TextureTypeCount];
-    efs_EntityPool* efs_entityPool;
+    efs_EntityPool efs_entityPool;
     efs_Entity* player;
     Camera2D camera;
     EntityTemplateTables entityTemplates;
