@@ -11,6 +11,7 @@ typedef enum ProjectileType
 typedef enum SpawnerType
 {
     SpawnerNormal,
+    SpawnerTwoPoints,
 
     SpawnerTypeCount,
 } SpawnerType;

@@ -3,7 +3,7 @@
 #include "based_basic.h"
 #include <assert.h>
 
-#define ENTITY_POOL_SIZE 100
+#define ENTITY_POOL_SIZE 1024
 #define PROPERTY_MAX_NUM 256
 #define NUM_PROPS_IN_U64 64
 static_assert(PROPERTY_MAX_NUM % NUM_PROPS_IN_U64 == 0, "needs to be a multiple of 64");
@@ -19,6 +19,7 @@ typedef enum {
     efs_prop_Collidable,
     efs_prop_DamagesPlayer,
     efs_prop_Spawner,
+    efs_prop_MovesBetweenTwoPoints,
     efs_prop_TempInvincible
 } efs_PropertyType;
 

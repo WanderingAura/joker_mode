@@ -5,6 +5,7 @@
 
 #include "based_basic.h"
 #include "based_logging.h"
+#include "core_entity_types.h"
 #include "core_game_memory.h"
 #include "core_menu_state.h"
 #include "core_texture.h"
@@ -46,7 +47,7 @@ void InitEntities(soc_GameMemory* memory)
     guy.rect.y = GetScreenHeight() / 2.0f;
     guy.rect.height = 64.0f;
     guy.rect.width = 64.0f;
-    guy.moveSpeed = 100.0f;
+    guy.moveSpeed = 300.0f;
     guy.texture = memory->textures[TextureGuy];
     efs_PoolAdd(&memory->efs_entityPool, guy);
 
@@ -54,8 +55,20 @@ void InitEntities(soc_GameMemory* memory)
     memory->player = &memory->efs_entityPool.entities[memory->efs_entityPool.activeHead];
 
     Vector2 middleOfScreen = {GetScreenWidth()/2.0f, GetScreenHeight()/2.0f};
-    efs_Entity spawner = ProjectileSpawnerCreate(SpawnerNormal, middleOfScreen, (Vector2){1.0f, 0.0f}, ProjectileNormal);
+    efs_Entity spawner = ProjectileSpawnerCreate(SpawnerNormal, middleOfScreen, (Vector2){1.0f, 0.0f}, ProjectileCircle);
     efs_PoolAdd(&memory->efs_entityPool, spawner);
+}
+
+void DrawBounds(BoundingRect bounds)
+{
+    Vector2 topLeft = bounds.min;
+    Vector2 bottomRight = bounds.max;
+    Vector2 topRight = {bounds.max.x, bounds.min.y};
+    Vector2 bottomLeft = {bounds.min.x, bounds.max.y};
+    DrawLineV(topLeft, topRight, RED);
+    DrawLineV(bottomLeft, bottomRight, RED);
+    DrawLineV(topLeft, bottomLeft, RED);
+    DrawLineV(topRight, bottomRight, RED);
 }
 
 void DrawEntities(soc_GameMemory* memory)
@@ -79,6 +92,8 @@ void InitDemoLevel(soc_GameMemory* memory)
     memory->camera.target = (Vector2){GetScreenWidth()/2.0f, GetScreenHeight()/2.0f};
     memory->camera.zoom = 1.0f;
     memory->camera.offset = (Vector2){GetScreenWidth()/2.0f, GetScreenHeight()/2.0f};
+    memory->levelBounds = (BoundingRect){{0,0}, {800,600}};
+    memory->levelTimer = 0.0f;
 
     ProjectileSystemInit(memory);
 }
@@ -102,6 +117,25 @@ SOC_EXPORT void soc_GameMemoryInit(soc_GameMemory* memory)
 
 void MainGameUpdate(soc_GameMemory* memory)
 {
+    memory->levelTimer += GetFrameTime();
+    static int count = 0;
+    if (count % (60*2) == 0)
+    {
+        Vector2 position = {GetRandomValue(-50, 850), GetRandomValue(-50, 650)};
+        Vector2 direction = Vector2Rotate((Vector2){1.0f, 0.0f}, GetRandomValue(0, 360));
+        efs_Entity spawner;
+        spawner = ProjectileSpawnerCreate(SpawnerNormal, position, direction, ProjectileCircle);
+        efs_PoolAdd(&memory->efs_entityPool, spawner);
+    }
+    else if (count % (60*3) == 0)
+    {
+        Vector2 position = {GetRandomValue(100, 500), GetRandomValue(100, 400)};
+        Vector2 direction = Vector2Rotate((Vector2){1.0f, 0.0f}, GetRandomValue(0, 360));
+        efs_Entity spawner;
+        spawner = ProjectileSpawnerCreate(SpawnerNormal, position, direction, ProjectileNormal);
+        efs_PoolAdd(&memory->efs_entityPool, spawner);
+    }
+    count++;
     //Entity updates
     {
         int index = memory->efs_entityPool.activeHead;
@@ -134,6 +168,12 @@ void MainGameUpdate(soc_GameMemory* memory)
                 Vector2 entityStep = Vector2Scale(entity->dir, entity->moveSpeed * GetFrameTime());
                 entity->pos.x += entityStep.x;
                 entity->pos.y += entityStep.y;
+                if (efs_EntityHasProperty(entity, efs_prop_PlayerControlled))
+                {
+                    // clamp player movement within the level's bounds
+                    Vector2 max = Vector2Subtract(memory->levelBounds.max, (Vector2){entity->rect.width, entity->rect.height});
+                    entity->pos = Vector2Clamp(entity->pos, memory->levelBounds.min, max);
+                }
             }
             if (efs_EntityHasProperty(entity, efs_prop_HasLifetime))
             {
@@ -199,10 +239,13 @@ void MainGameUpdate(soc_GameMemory* memory)
         {
             core_TilemapDraw(&memory->tilemap);
             DrawEntities(memory);
+            DrawBounds(memory->levelBounds);
         }
         EndMode2D();
 
-        // DrawText(TextFormat("Player Health: %d", memory->player->health), 10, 10, 10, RED);
+        DrawText(TextFormat("Player Health: %d", memory->player->health), 10, 10, 20, RED);
+        DrawText(TextFormat("Time survived: %.1f", memory->levelTimer), 10, 40, 20, GREEN);
+
         DrawFPS(GetScreenWidth()-20, 0);
     }
     EndDrawing();
@@ -240,8 +283,9 @@ void GameoverScreenUpdate(soc_GameMemory* memory)
 
     BeginDrawing();
         DrawRectangle(0, 0, screenWidth, screenHeight, BLUE);
-        DrawText("ENDING SCREEN", 20, 20, 40, DARKBLUE);
-        DrawText("PRESS ANY KEY TO RETURN TO TITLE SCREEN", 120, 220, 20, DARKBLUE);
+        DrawText("GAME OVER", 300, 200, 60, DARKBLUE);
+        DrawText(TextFormat("Time survived: %.1f seconds", memory->levelTimer), 200, 300, 40, GREEN);
+        DrawText("PRESS ANY KEY TO RETURN TO TITLE SCREEN", 120, 350, 20, DARKBLUE);
     EndDrawing();
 }
 

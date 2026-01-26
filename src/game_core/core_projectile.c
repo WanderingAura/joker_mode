@@ -1,3 +1,4 @@
+#include "core_entity_types.h"
 #include "core_game_memory.h"
 #include "efs_entity.h"
 #include "raylib.h"
@@ -17,8 +18,8 @@ void ProjectileSystemInit(soc_GameMemory* memory)
     efs_EntitySetProperty(&memory->entityTemplates.projectile[ProjectileNormal], efs_prop_HasLifetime);
     efs_EntitySetProperty(&memory->entityTemplates.projectile[ProjectileNormal], efs_prop_Collidable);
     efs_EntitySetProperty(&memory->entityTemplates.projectile[ProjectileNormal], efs_prop_DamagesPlayer);
-    memory->entityTemplates.projectile[ProjectileNormal].lifetime = 10.0f;
-    memory->entityTemplates.projectile[ProjectileNormal].moveSpeed = 300.0f;
+    memory->entityTemplates.projectile[ProjectileNormal].lifetime = 5.0f;
+    memory->entityTemplates.projectile[ProjectileNormal].moveSpeed = 350.0f;
     memory->entityTemplates.projectile[ProjectileNormal].texture = memory->textures[TextureProjectile];
     memory->entityTemplates.projectile[ProjectileNormal].rect.width = PROJ_SIZE;
     memory->entityTemplates.projectile[ProjectileNormal].rect.height = PROJ_SIZE;
@@ -28,9 +29,10 @@ void ProjectileSystemInit(soc_GameMemory* memory)
     efs_EntitySetProperty(&memory->entityTemplates.projectile[ProjectileCircle], efs_prop_HasLifetime);
     efs_EntitySetProperty(&memory->entityTemplates.projectile[ProjectileCircle], efs_prop_Collidable);
     efs_EntitySetProperty(&memory->entityTemplates.projectile[ProjectileCircle], efs_prop_HasRotation);
-    memory->entityTemplates.projectile[ProjectileCircle].lifetime = 20.0f;
-    memory->entityTemplates.projectile[ProjectileCircle].moveSpeed = 150.0f;
-    memory->entityTemplates.projectile[ProjectileCircle].rotationSpeed = 10.0f;
+    efs_EntitySetProperty(&memory->entityTemplates.projectile[ProjectileCircle], efs_prop_DamagesPlayer);
+    memory->entityTemplates.projectile[ProjectileCircle].lifetime = 5.0f;
+    memory->entityTemplates.projectile[ProjectileCircle].moveSpeed = 300.0f;
+    memory->entityTemplates.projectile[ProjectileCircle].rotationSpeed = 1.0f;
     memory->entityTemplates.projectile[ProjectileCircle].texture = memory->textures[TextureProjectile];
     memory->entityTemplates.projectile[ProjectileCircle].rect.width = PROJ_SIZE;
     memory->entityTemplates.projectile[ProjectileCircle].rect.height = PROJ_SIZE;
@@ -42,6 +44,14 @@ void ProjectileSystemInit(soc_GameMemory* memory)
     memory->entityTemplates.spawner[SpawnerNormal].timeSinceLastSpawn = 0.5f;
     memory->entityTemplates.spawner[SpawnerNormal].rect.width = 32;
     memory->entityTemplates.spawner[SpawnerNormal].rect.height = 32;
+
+    efs_EntitySetProperty(&memory->entityTemplates.spawner[SpawnerTwoPoints], efs_prop_Spawner);
+    efs_EntitySetProperty(&memory->entityTemplates.spawner[SpawnerTwoPoints], efs_prop_MovesBetweenTwoPoints);
+    memory->entityTemplates.spawner[SpawnerTwoPoints].texture = memory->textures[TextureProjectileSpawner];
+    memory->entityTemplates.spawner[SpawnerTwoPoints].spawnTime = 1.0f;
+    memory->entityTemplates.spawner[SpawnerTwoPoints].timeSinceLastSpawn = 1.0f;
+    memory->entityTemplates.spawner[SpawnerTwoPoints].rect.width = 32;
+    memory->entityTemplates.spawner[SpawnerTwoPoints].rect.height = 32;
 
     BSD_INF("projectile system initialised");
 }

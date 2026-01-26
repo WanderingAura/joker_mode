@@ -12,12 +12,20 @@ typedef struct
     efs_Entity spawner[SpawnerTypeCount];
 } EntityTemplateTables;
 
+typedef struct
+{
+    Vector2 min;
+    Vector2 max;
+} BoundingRect;
+
 typedef struct {
     core_Tilemap tilemap;
     Texture2D textures[TextureTypeCount];
     efs_EntityPool efs_entityPool;
     efs_Entity* player;
     Camera2D camera;
+    BoundingRect levelBounds;
+    float levelTimer;
     EntityTemplateTables entityTemplates;
     GameMenuState menuState;
 } soc_GameMemory;

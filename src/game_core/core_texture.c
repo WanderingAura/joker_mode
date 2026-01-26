@@ -16,8 +16,13 @@ void core_TexturesInit(soc_GameMemory* memory)
         }
     }
 
+    Image spawnerImg = GenImageColor(32, 32, ORANGE);
+    Image projImg = GenImageColor(16, 16, RED);
     memory->textures[TextureGrass] = LoadTexture("assets/grass.png");
     memory->textures[TextureGuy] = LoadTexture("assets/bloke.png");
-    memory->textures[TextureProjectile] = memory->textures[TextureGuy]; // TODO: make an actual texture for the projectile
-    memory->textures[TextureProjectileSpawner] = memory->textures[TextureGuy];
+    memory->textures[TextureProjectile] = LoadTextureFromImage(projImg);
+    memory->textures[TextureProjectileSpawner] = LoadTextureFromImage(spawnerImg);
+
+    UnloadImage(spawnerImg);
+    UnloadImage(projImg);
 }
