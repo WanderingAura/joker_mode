@@ -1,4 +1,3 @@
-#include <asm-generic/errno.h>
 #include <raylib.h>
 #include <string.h>
 #include <raymath.h>
