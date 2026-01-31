@@ -16,8 +16,8 @@ void core_TilemapInit(core_Tilemap* tilemap, Vector2 pos, u32 columns, u32 rows,
 
 void core_TilemapUpdate(core_Tilemap* tilemap, const Camera2D* cam)
 {
-    int screenHeight = GetScreenHeight();
-    int screenWidth = GetScreenWidth();
+    int screenHeight = (float)GetScreenHeight();
+    int screenWidth = (float)GetScreenWidth();
 
     // TODO: 16 should not be hard coded, this should be the tilewidth maybe?
     int tileMapX = (((int)cam->target.x - screenWidth/2 )/16) * 16 - 32;

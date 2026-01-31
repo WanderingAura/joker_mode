@@ -10,13 +10,14 @@ typedef enum {
     bsd_LogLevel_Critical
 } bsd_LogLevel;
 
-
 static inline const char* filename(const char* path)
 {
     const char* file = path;
     for (const char* p = path; *p; ++p) {
         if (*p == '/' || *p == '\\')
+        {
             file = p + 1;
+        }
     }
     return file;
 }

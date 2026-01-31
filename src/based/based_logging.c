@@ -84,7 +84,7 @@ void bsd_log_stdout(bsd_LogLevel level, int line, const char* restrict file, con
 
     int n = snprintf(logBuf, LOG_LINE_LEN_MAX - 1, "[%12.6lf] [%s] [%s:%d] ",
             timeSinceInit, dbgLevels[level], file, line);
-    assert(n > 25);
+    assert(n < LOG_LINE_LEN_MAX);
 
     char* curPos = logBuf + n;
     int curLineMax = LOG_LINE_LEN_MAX - n - 1;
@@ -94,7 +94,7 @@ void bsd_log_stdout(bsd_LogLevel level, int line, const char* restrict file, con
     va_start(args, fmt);
 
     n = vsnprintf(curPos, curLineMax, fmt, args);
-    assert(n > 0);
+    assert(n < curLineMax);
 
     va_end(args);
 

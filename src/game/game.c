@@ -26,7 +26,7 @@ SOC_EXPORT void soc_GameModuleInit(soc_GameMemory* memory)
 
     ProjectileSystemInit(memory);
 
-    // efs_Entity proj = ProjectileEntityCreate(ProjectileNormal, (Vector2){GetScreenWidth() / 2.0f,GetScreenHeight()/ 2.0f}, (Vector2){1.0f, 0.0f});
+    // efs_Entity proj = ProjectileEntityCreate(ProjectileNormal, (Vector2){(float)GetScreenWidth() / 2.0f,(float)GetScreenHeight()/ 2.0f}, (Vector2){1.0f, 0.0f});
     // efs_PoolAdd(memory->efs_entityPool, proj);
 
 
@@ -42,8 +42,8 @@ void InitEntities(soc_GameMemory* memory)
     guy.health = 10;
     guy.dir.x = 0.0f;
     guy.dir.y = 0.0f;
-    guy.rect.x = GetScreenWidth() / 2.0f;
-    guy.rect.y = GetScreenHeight() / 2.0f;
+    guy.rect.x = (float)GetScreenWidth() / 2.0f;
+    guy.rect.y = (float)GetScreenHeight() / 2.0f;
     guy.rect.height = 64.0f;
     guy.rect.width = 64.0f;
     guy.moveSpeed = 300.0f;
@@ -53,7 +53,7 @@ void InitEntities(soc_GameMemory* memory)
     // // store a pointer to the player so that it's easily accessed
     memory->player = &memory->efs_entityPool.entities[memory->efs_entityPool.activeHead];
 
-    Vector2 middleOfScreen = {GetScreenWidth()/2.0f, GetScreenHeight()/2.0f};
+    Vector2 middleOfScreen = {(float)GetScreenWidth()/2.0f, (float)GetScreenHeight()/2.0f};
     efs_Entity spawner = ProjectileSpawnerCreate(SpawnerNormal, middleOfScreen, (Vector2){1.0f, 0.0f}, ProjectileCircle);
     efs_PoolAdd(&memory->efs_entityPool, spawner);
 }
@@ -88,9 +88,9 @@ void InitDemoLevel(soc_GameMemory* memory)
     core_TilemapInit(&memory->tilemap, (Vector2){0,0}, 16, 12, memory->textures[TextureGrass]);
     InitEntities(memory);
     //Add guy to pool
-    memory->camera.target = (Vector2){GetScreenWidth()/2.0f, GetScreenHeight()/2.0f};
+    memory->camera.target = (Vector2){(float)GetScreenWidth()/2.0f, (float)GetScreenHeight()/2.0f};
     memory->camera.zoom = 1.0f;
-    memory->camera.offset = (Vector2){GetScreenWidth()/2.0f, GetScreenHeight()/2.0f};
+    memory->camera.offset = (Vector2){(float)GetScreenWidth()/2.0f, (float)GetScreenHeight()/2.0f};
     memory->levelBounds = (BoundingRect){{0,0}, {800,600}};
     memory->levelTimer = 0.0f;
 
@@ -245,15 +245,15 @@ void MainGameUpdate(soc_GameMemory* memory)
         DrawText(TextFormat("Player Health: %d", memory->player->health), 10, 10, 20, RED);
         DrawText(TextFormat("Time survived: %.1f", memory->levelTimer), 10, 40, 20, GREEN);
 
-        DrawFPS(GetScreenWidth()-20, 0);
+        DrawFPS((float)GetScreenWidth()-20, 0);
     }
     EndDrawing();
 }
 
 void TitleScreenUpdate(soc_GameMemory* memory)
 {
-    int screenWidth = GetScreenWidth();
-    int screenHeight = GetScreenHeight();
+    int screenWidth = (float)GetScreenWidth();
+    int screenHeight = (float)GetScreenHeight();
 
     int key = GetKeyPressed();
     if (key != 0)
@@ -271,8 +271,8 @@ void TitleScreenUpdate(soc_GameMemory* memory)
 
 void GameoverScreenUpdate(soc_GameMemory* memory)
 {
-    int screenWidth = GetScreenWidth();
-    int screenHeight = GetScreenHeight();
+    int screenWidth = (float)GetScreenWidth();
+    int screenHeight = (float)GetScreenHeight();
 
     int key = GetKeyPressed();
     if (key != 0)

@@ -2,8 +2,9 @@
 #include <assert.h>
 #include "based_basic.h"
 #include "based_arena.h"
+#include <stdlib.h>
 
-#define MEGABYTE (1024*1024)
+#define MEGABYTE (1024L*1024L)
 #define DEFAULT_ARENA_CAPACITY (2*MEGABYTE)
 
 void bsd_ArenaInit(bsd_Arena* arena, u64 capacity)

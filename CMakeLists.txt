@@ -18,6 +18,9 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 option(ENABLE_UNITY_BUILD "Enable unity build compilation for targets that support it" ON)
 
+# message is read by a script. DO NOT CHANGE
+message("CMAKE_BINARY_DIR: ${CMAKE_BINARY_DIR}")
+
 include(FindJokerLibraries)
 
 # Web Configurations
