@@ -37,7 +37,7 @@ typedef s64 b64;
     do { \
         if (!(cond)) \
         { \
-            BSD_CRIT(msg __VA_OPT__(,) __VA_ARGS__); \
+            BSD_CRIT("Assertion" STRINGIFY(cond) " failed" msg __VA_OPT__(,) __VA_ARGS__); \
         } \
     } while (0)
 #else
