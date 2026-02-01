@@ -1,17 +1,21 @@
 include(TargetCreationFuncs)
 
-joker_add_exe(society
-    main.c
-    $<TARGET_OBJECTS:vos>
-)
-joker_target_link_raylib(society)
-
-joker_exe_ext(society)
-
-target_link_libraries(society PRIVATE based efs vos game_core)
-
-joker_add_lib(soc SHARED game.c)
+joker_add_lib(soc SHARED)
 joker_target_link_raylib(soc)
-target_include_directories(soc INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(soc PRIVATE based game_core efs)
+target_sources(soc PRIVATE
+    core_game_memory.c
+    game.c
+)
+
+target_link_libraries(soc PRIVATE based efs gameplay game_api)
+
+add_library(game_api INTERFACE)
+
+target_include_directories(game_api INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+
+target_link_libraries(game_api INTERFACE
+    gameplay_interface
+    level_interface
+    render_interface
+)
