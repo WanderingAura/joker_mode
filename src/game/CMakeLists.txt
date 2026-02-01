@@ -8,7 +8,7 @@ target_sources(soc PRIVATE
     game.c
 )
 
-target_link_libraries(soc PRIVATE based efs gameplay game_api)
+target_link_libraries(soc PRIVATE based efs gameplay game_api level render)
 
 add_library(game_api INTERFACE)
 

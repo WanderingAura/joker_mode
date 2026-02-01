@@ -4,11 +4,11 @@
     - [x] Add basic title screen
 - [x] Transition to game over screen when player health reaches 0
 - [x] Change initialisation of resources (mainly the entity pool) to be idempotent. Saves us from destroying the resources (we can just reset them during initialisation)
-- [ ] Refactor the folder structure slightly
-    - [ ] Move game.c into core and make a standalone build option for soc.dll
-    - [ ] Move entity templates into a separate folder
-    - [ ] Textures should be in a separate render folder
-    - [ ] tilemap-like and level init code in the world folder
+- [x] Refactor the folder structure slightly
+    - [x] Move game.c into core and make a standalone build option for soc.dll
+    - [x] Move entity templates into a separate folder
+    - [x] Textures should be in a separate render folder
+    - [x] tilemap-like and level init code in the world folder
 - [ ] Improve entity gameplay code
     - [ ] Add a scaling attribute to all entities, that make them faster/slower
     - [ ] Support entities to be spawned at an offset location to parent.

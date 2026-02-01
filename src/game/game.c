@@ -9,7 +9,7 @@
 #include "core_menu_state.h"
 #include "core_texture.h"
 #include "core_tilemap.h"
-#include "core_projectile.h"
+#include "core_entity_template.h"
 #include "efs_entity.h"
 
 #if defined(__linux__)
@@ -24,7 +24,7 @@ SOC_EXPORT void soc_GameModuleInit(soc_GameMemory* memory)
 {
     core_GameMemorySet(memory);
 
-    ProjectileSystemInit(memory);
+    EntityTemplatesInit(&memory->entityTemplates, memory->textures);
 
     // efs_Entity proj = ProjectileEntityCreate(ProjectileNormal, (Vector2){(float)GetScreenWidth() / 2.0f,(float)GetScreenHeight()/ 2.0f}, (Vector2){1.0f, 0.0f});
     // efs_PoolAdd(memory->efs_entityPool, proj);
@@ -94,7 +94,7 @@ void InitDemoLevel(soc_GameMemory* memory)
     memory->levelBounds = (BoundingRect){{0,0}, {800,600}};
     memory->levelTimer = 0.0f;
 
-    ProjectileSystemInit(memory);
+    EntityTemplatesInit(&memory->entityTemplates, memory->textures);
 }
 
 SOC_EXPORT void soc_GameMemoryInit(soc_GameMemory* memory)

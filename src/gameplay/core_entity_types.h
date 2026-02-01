@@ -1,4 +1,7 @@
 #pragma once
+#include <raylib.h>
+#include <efs_entity.h>
+
 typedef enum ProjectileType
 {
     ProjectileNormal,
@@ -15,3 +18,9 @@ typedef enum SpawnerType
 
     SpawnerTypeCount,
 } SpawnerType;
+
+typedef struct {
+    efs_Entity* template;
+    Vector2 offset;
+    Vector2 dir;
+} SpawnedEntity;
