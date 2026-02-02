@@ -20,7 +20,8 @@ typedef enum {
     efs_prop_DamagesPlayer,
     efs_prop_Spawner,
     efs_prop_MovesBetweenTwoPoints,
-    efs_prop_TempInvincible
+    efs_prop_TempInvincible,
+    efs_prop_DespawnWhenFarFromPlayer
 } efs_PropertyType;
 
 typedef struct efs_Entity {
@@ -39,6 +40,7 @@ typedef struct efs_Entity {
     float moveSpeed;
     float invincibleTimer;
     int health;
+    float despawnDistance;
     struct efs_Entity* entityToSpawn;
     Vector2 spawnedEntityDir;
     struct efs_Entity* following; // watch out for dangling references

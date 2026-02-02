@@ -32,6 +32,16 @@ SOC_EXPORT void soc_GameModuleInit(soc_GameMemory* memory)
 
 }
 
+void ClampIfPlayer(efs_Entity* entity, BoundingRect bounds)
+{
+    if (efs_EntityHasProperty(entity, efs_prop_PlayerControlled))
+    {
+        // clamp player movement within the level's bounds
+        Vector2 max = Vector2Subtract(bounds.max, (Vector2){entity->rect.width, entity->rect.height});
+        entity->pos = Vector2Clamp(entity->pos, bounds.min, max);
+    }
+}
+
 void InitEntities(soc_GameMemory* memory)
 {
     //DEFINE guy
@@ -137,6 +147,7 @@ void MainGameUpdate(soc_GameMemory* memory)
     count++;
     //Entity updates
     {
+        efs_Entity* player = memory->player;
         int index = memory->efs_entityPool.activeHead;
         while(index >= 0) {
             efs_Entity* entity = &memory->efs_entityPool.entities[index];
@@ -167,12 +178,6 @@ void MainGameUpdate(soc_GameMemory* memory)
                 Vector2 entityStep = Vector2Scale(entity->dir, entity->moveSpeed * GetFrameTime());
                 entity->pos.x += entityStep.x;
                 entity->pos.y += entityStep.y;
-                if (efs_EntityHasProperty(entity, efs_prop_PlayerControlled))
-                {
-                    // clamp player movement within the level's bounds
-                    Vector2 max = Vector2Subtract(memory->levelBounds.max, (Vector2){entity->rect.width, entity->rect.height});
-                    entity->pos = Vector2Clamp(entity->pos, memory->levelBounds.min, max);
-                }
             }
             if (efs_EntityHasProperty(entity, efs_prop_HasLifetime))
             {
@@ -200,15 +205,15 @@ void MainGameUpdate(soc_GameMemory* memory)
             }
 
             // update for damaging player
-            if (!efs_EntityHasProperty(memory->player, efs_prop_TempInvincible)
+            if (!efs_EntityHasProperty(player, efs_prop_TempInvincible)
                 && efs_EntityHasProperty(entity, efs_prop_DamagesPlayer))
             {
-                if (memory->player && CheckCollisionRecs(entity->rect, memory->player->rect))
+                if (player && CheckCollisionRecs(entity->rect, player->rect))
                 {
                     // this projectile has collided with player
-                    efs_EntitySetProperty(memory->player, efs_prop_TempInvincible);
-                    memory->player->invincibleTimer = 1.0f;
-                    memory->player->health -= 3;
+                    efs_EntitySetProperty(player, efs_prop_TempInvincible);
+                    player->invincibleTimer = 1.0f;
+                    player->health -= 3;
                 }
             }
 
@@ -218,6 +223,16 @@ void MainGameUpdate(soc_GameMemory* memory)
                 if (entity->invincibleTimer < 0)
                 {
                     efs_EntityUnsetProperty(entity, efs_prop_TempInvincible);
+                }
+            }
+
+            if (efs_EntityHasProperty(entity, efs_prop_DespawnWhenFarFromPlayer))
+            {
+                DBG_ASSERT_MSG(entity->despawnDistance > 0, "Got %f despawn distance. Entity with this property should have >0 despawn distance");
+                float distanceToPlayer = Vector2Distance(entity->pos, player->pos);
+                if (distanceToPlayer > entity->despawnDistance)
+                {
+                    efs_PoolDelete(&memory->efs_entityPool, index);
                 }
             }
             index = nextIndex;

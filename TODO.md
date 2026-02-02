@@ -12,7 +12,7 @@
 - [ ] Improve entity gameplay code
     - [ ] Add a scaling attribute to all entities, that make them faster/slower
     - [ ] Support entities to be spawned at an offset location to parent.
-    - [ ] Projectiles should die when they are too far away from the player/camera
+    - [x] Projectiles should die when they are too far away from the player/camera
     - [ ] Add a moving projectile spawner
 - [ ] Make a 4x bigger demo level with walls and fixed location spawners, spawning different projectiles
     - [ ] Add walls
