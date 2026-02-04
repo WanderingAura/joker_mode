@@ -56,7 +56,7 @@ void InitEntities(soc_GameMemory* memory)
     guy.rect.y = (float)GetScreenHeight() / 2.0f;
     guy.rect.height = 64.0f;
     guy.rect.width = 64.0f;
-    guy.moveSpeed = 300.0f;
+    guy.baseMoveSpeed = 300.0f;
     guy.texture = memory->textures[TextureGuy];
     efs_PoolAdd(&memory->efs_entityPool, guy);
 
@@ -172,10 +172,15 @@ void MainGameUpdate(soc_GameMemory* memory)
             }
             if (efs_EntityHasProperty(entity, efs_prop_HasRotation))
             {
-                entity->dir = Vector2Rotate(entity->dir, entity->rotationSpeed * GetFrameTime());
+                entity->dir = Vector2Rotate(entity->dir, entity->baseRotationSpeed * GetFrameTime());
             }
             if(efs_EntityHasProperty(entity, efs_prop_CanMove)) {
-                Vector2 entityStep = Vector2Scale(entity->dir, entity->moveSpeed * GetFrameTime());
+                float stepAmount = entity->baseMoveSpeed * GetFrameTime();
+                if (efs_EntityHasProperty(entity, efs_prop_ScalesWithDifficulty))
+                {
+                    stepAmount *= 1 + memory->levelTimer/10;
+                }
+                Vector2 entityStep = Vector2Scale(entity->dir, stepAmount);
                 entity->pos.x += entityStep.x;
                 entity->pos.y += entityStep.y;
             }

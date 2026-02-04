@@ -18,8 +18,9 @@ static void ProjectileTemplatesInit(efs_Entity template_table[ProjectileTypeCoun
     efs_EntitySetProperty(&template_table[ProjectileNormal], efs_prop_Collidable);
     efs_EntitySetProperty(&template_table[ProjectileNormal], efs_prop_DamagesPlayer);
     efs_EntitySetProperty(&template_table[ProjectileNormal], efs_prop_DespawnWhenFarFromPlayer);
+    efs_EntitySetProperty(&template_table[ProjectileNormal], efs_prop_ScalesWithDifficulty);
     template_table[ProjectileNormal].lifetime = 5.0f;
-    template_table[ProjectileNormal].moveSpeed = 350.0f;
+    template_table[ProjectileNormal].baseMoveSpeed = 350.0f;
     template_table[ProjectileNormal].despawnDistance = 300.0f;
     template_table[ProjectileNormal].texture = textures[TextureProjectile];
     template_table[ProjectileNormal].rect.width = PROJ_SIZE;
@@ -28,8 +29,8 @@ static void ProjectileTemplatesInit(efs_Entity template_table[ProjectileTypeCoun
     memcpy(&template_table[ProjectileCircle], &template_table[ProjectileNormal], sizeof(efs_Entity));
     efs_EntitySetProperty(&template_table[ProjectileCircle], efs_prop_HasRotation);
     template_table[ProjectileCircle].lifetime = 5.0f;
-    template_table[ProjectileCircle].moveSpeed = 300.0f;
-    template_table[ProjectileCircle].rotationSpeed = 1.0f;
+    template_table[ProjectileCircle].baseMoveSpeed = 300.0f;
+    template_table[ProjectileCircle].baseRotationSpeed = 1.0f;
 }
 
 static void SpawnerTemplatesInit(efs_Entity template_table[SpawnerTypeCount], const Texture2D textures[TextureTypeCount])

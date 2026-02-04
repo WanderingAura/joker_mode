@@ -21,7 +21,8 @@ typedef enum {
     efs_prop_Spawner,
     efs_prop_MovesBetweenTwoPoints,
     efs_prop_TempInvincible,
-    efs_prop_DespawnWhenFarFromPlayer
+    efs_prop_DespawnWhenFarFromPlayer,
+    efs_prop_ScalesWithDifficulty,
 } efs_PropertyType;
 
 typedef struct efs_Entity {
@@ -36,8 +37,8 @@ typedef struct efs_Entity {
     float timeSinceLastSpawn;
     float lifetime;
     float spawnTime;
-    float rotationSpeed;
-    float moveSpeed;
+    float baseRotationSpeed;
+    float baseMoveSpeed;
     float invincibleTimer;
     int health;
     float despawnDistance;
