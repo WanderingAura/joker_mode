@@ -64,7 +64,12 @@ void InitEntities(soc_GameMemory* memory)
     memory->player = &memory->efs_entityPool.entities[memory->efs_entityPool.activeHead];
 
     Vector2 middleOfScreen = {(float)GetScreenWidth()/2.0f, (float)GetScreenHeight()/2.0f};
-    efs_Entity spawner = ProjectileSpawnerCreate(SpawnerNormal, middleOfScreen, (Vector2){1.0f, 0.0f}, ProjectileCircle);
+
+    SpawnedProjInfo spawnedInfo = {
+        ProjectileNormal,
+        .offset = {100, 0},
+        .dir = {1,0}};
+    efs_Entity spawner = ProjectileSpawnerCreate(SpawnerNormal, middleOfScreen, (Vector2){1.0f, 0.0f}, spawnedInfo);
     efs_PoolAdd(&memory->efs_entityPool, spawner);
 }
 
@@ -133,7 +138,8 @@ void MainGameUpdate(soc_GameMemory* memory)
         Vector2 position = {GetRandomValue(-50, 850), GetRandomValue(-50, 650)};
         Vector2 direction = Vector2Rotate((Vector2){1.0f, 0.0f}, GetRandomValue(0, 360));
         efs_Entity spawner;
-        spawner = ProjectileSpawnerCreate(SpawnerNormal, position, direction, ProjectileCircle);
+        SpawnedProjInfo spawnedInfo = {ProjectileCircle, {1, 0}, {1,0}};
+        spawner = ProjectileSpawnerCreate(SpawnerNormal, position, direction, spawnedInfo);
         efs_PoolAdd(&memory->efs_entityPool, spawner);
     }
     else if (count % (60*3) == 0)
@@ -141,7 +147,8 @@ void MainGameUpdate(soc_GameMemory* memory)
         Vector2 position = {GetRandomValue(100, 500), GetRandomValue(100, 400)};
         Vector2 direction = Vector2Rotate((Vector2){1.0f, 0.0f}, GetRandomValue(0, 360));
         efs_Entity spawner;
-        spawner = ProjectileSpawnerCreate(SpawnerNormal, position, direction, ProjectileNormal);
+        SpawnedProjInfo spawnedInfo = {ProjectileNormal, {1, 0}, {1,0}};
+        spawner = ProjectileSpawnerCreate(SpawnerNormal, position, direction, spawnedInfo);
         efs_PoolAdd(&memory->efs_entityPool, spawner);
     }
     count++;
@@ -199,12 +206,9 @@ void MainGameUpdate(soc_GameMemory* memory)
                 {
                     entity->timeSinceLastSpawn = 0;
                     efs_Entity spawned = {};
-                    memcpy(&spawned, entity->entityToSpawn, sizeof(efs_Entity));
-                    spawned.dir = entity->spawnedEntityDir;
-                    // TODO: here we need an extra value stored in the entity to indicate spawn offset
-                    // TODO: we really need a mechanism to set a rotation value so that the entity
-                    // can be at different orientations...
-                    spawned.pos = entity->pos;
+                    memcpy(&spawned, entity->childInfo.template, sizeof(efs_Entity));
+                    spawned.dir = entity->childInfo.initialDir;
+                    spawned.pos = Vector2Add(entity->pos, entity->childInfo.offset);
                     efs_PoolAdd(&memory->efs_entityPool, spawned);
                 }
             }

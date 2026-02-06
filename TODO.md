@@ -10,8 +10,8 @@
     - [x] Textures should be in a separate render folder
     - [x] tilemap-like and level init code in the world folder
 - [ ] Improve entity gameplay code
-    - [ ] Add a scaling attribute to all entities, that make them faster/slower
-    - [ ] Support entities to be spawned at an offset location to parent.
+    - [x] Add a scaling attribute to all entities, that make them faster/slower
+    - [x] Support entities to be spawned at an offset location to parent.
     - [x] Projectiles should die when they are too far away from the player/camera
     - [ ] Add a moving projectile spawner
 - [ ] Make a 4x bigger demo level with walls and fixed location spawners, spawning different projectiles

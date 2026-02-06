@@ -70,16 +70,14 @@ efs_Entity ProjectileEntityCreate(ProjectileType type, Vector2 pos, Vector2 dir)
     return proj;
 }
 
-efs_Entity ProjectileSpawnerCreate(SpawnerType type, Vector2 pos, Vector2 dir, ProjectileType spawnedProjectileType)
+efs_Entity ProjectileSpawnerCreate(SpawnerType type, Vector2 pos, Vector2 dir, SpawnedProjInfo spawnedInfo)
 {
     EntityTemplateTables* templates = &core_GameMemoryGet()->entityTemplates;
     efs_Entity spawner = templates->spawner[type];
     spawner.dir = dir;
     spawner.pos = pos;
-    // TODO: this is a bit scuffed currently. if we want the spawner to move and the spawned
-    // spawned projectile have a relative position and velocity to the spawner, we need a struct
-    // stored containing pos, dir and entityToSpawn (and possibly movespeed of spawner??)
-    spawner.entityToSpawn = &templates->projectile[spawnedProjectileType];
-    spawner.spawnedEntityDir = dir;
+    spawner.childInfo.template = &templates->projectile[spawnedInfo.type];
+    spawner.childInfo.initialDir = spawnedInfo.dir;
+    spawner.childInfo.offset = spawnedInfo.offset;
     return spawner;
 }

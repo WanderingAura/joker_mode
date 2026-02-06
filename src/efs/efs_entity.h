@@ -25,6 +25,14 @@ typedef enum {
     efs_prop_ScalesWithDifficulty,
 } efs_PropertyType;
 
+struct efs_Entity;
+
+typedef struct {
+    struct efs_Entity* template;
+    Vector2 initialDir;
+    Vector2 offset;
+} efs_Child;
+
 typedef struct efs_Entity {
     efs_Properties props;
     int next;
@@ -40,9 +48,10 @@ typedef struct efs_Entity {
     float baseRotationSpeed;
     float baseMoveSpeed;
     float invincibleTimer;
+    Vector2 offsetFromParent;
     int health;
     float despawnDistance;
-    struct efs_Entity* entityToSpawn;
+    efs_Child childInfo; // contains template for entities
     Vector2 spawnedEntityDir;
     struct efs_Entity* following; // watch out for dangling references
     Texture2D texture;
