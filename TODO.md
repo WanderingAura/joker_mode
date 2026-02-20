@@ -18,5 +18,6 @@
     - [ ] Add walls
     - [ ] Add basic rectangular collision
     - [ ] Make a demo level 
+- [ ] Make some better looking textures
 - [ ] Possible improvements later on
     - [ ] Chunk the world so that only the closest 9 chunks are loaded. Chunks should be large enough that all walls have lenght less than half a chunk. (this will be needed if we get levels large enough for collision checks to be laggy).

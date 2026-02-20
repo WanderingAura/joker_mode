@@ -30,7 +30,7 @@ static void ProjectileTemplatesInit(efs_Entity template_table[ProjectileTypeCoun
     efs_EntitySetProperty(&template_table[ProjectileCircle], efs_prop_HasRotation);
     template_table[ProjectileCircle].lifetime = 5.0f;
     template_table[ProjectileCircle].baseMoveSpeed = 300.0f;
-    template_table[ProjectileCircle].baseRotationSpeed = 1.0f;
+    template_table[ProjectileCircle].baseRotationSpeed = 4.0f;
 }
 
 static void SpawnerTemplatesInit(efs_Entity template_table[SpawnerTypeCount], const Texture2D textures[TextureTypeCount])

@@ -66,9 +66,9 @@ void InitEntities(soc_GameMemory* memory)
     Vector2 middleOfScreen = {(float)GetScreenWidth()/2.0f, (float)GetScreenHeight()/2.0f};
 
     SpawnedProjInfo spawnedInfo = {
-        ProjectileNormal,
+        ProjectileCircle,
         .offset = {100, 0},
-        .dir = {1,0}};
+        .dir = {0,1}};
     efs_Entity spawner = ProjectileSpawnerCreate(SpawnerNormal, middleOfScreen, (Vector2){1.0f, 0.0f}, spawnedInfo);
     efs_PoolAdd(&memory->efs_entityPool, spawner);
 }
