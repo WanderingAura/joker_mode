@@ -21,3 +21,8 @@
 - [ ] Make some better looking textures
 - [ ] Possible improvements later on
     - [ ] Chunk the world so that only the closest 9 chunks are loaded. Chunks should be large enough that all walls have lenght less than half a chunk. (this will be needed if we get levels large enough for collision checks to be laggy).
+
+- [ ] make a cross platform socket library with recv buffering
+    - [ ] make a data type for the recv buffer: maybe an array which gets flushed whenever the read pointer gets to the end
+    - [ ] just make a blocking API for now, we can make it non-blocking later, if we need
+- [ ] make an http library
