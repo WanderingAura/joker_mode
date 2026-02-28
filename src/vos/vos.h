@@ -27,16 +27,6 @@ vos_DLLFuncPtr vos_DLLGetFunc(vos_DLLHandle handle, const char* funcName);
 
 void GetTmpDLLName(char* dest, const char* file);
 
-#define IPV4_ADDR_SIZE 4
-#define IPV6_ADDR_SIZE 16
-#if defined(_WIN32)
-  typedef SOCKET vos_SocketHandle;
-  #define vos_INVALID_SOCKET_HANDLE ((SOCKET)(~0))
-#elif defined(__linux__)
-  typedef int vos_SocketHandle;
-  #define vos_INVALID_SOCKET_HANDLE (-1)
-#endif
-
 #if defined(__BYTE_ORDER__)
   #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
     #define VOS_BIG_ENDIAN
@@ -57,34 +47,34 @@ void GetTmpDLLName(char* dest, const char* file);
         (((x) & 0x00ff0000ul) >> 8)  | \
         (((x) & 0xff000000ul) >> 24))
 
-typedef enum
-{
-  vos_SocketTCP,
-  vos_SocketUDP
-} vos_SocketType;
+// typedef enum
+// {
+//   vos_SocketTCP,
+//   vos_SocketUDP
+// } vos_SocketType;
 
-typedef enum
-{
-  vos_IPv4,
-  vos_IPv6,
-} vos_IPVersion;
+// typedef enum
+// {
+//   vos_IPv4,
+//   vos_IPv6,
+// } vos_IPVersion;
 
-typedef enum
-{
-  vos_SocketModeBlocking,
-  vos_SocketModeNonBlocking,
-} vos_SocketMode;
+// typedef enum
+// {
+//   vos_SocketModeBlocking,
+//   vos_SocketModeNonBlocking,
+// } vos_SocketMode;
 
-typedef struct
-{
-  vos_SocketType type;
-  vos_IPVersion ipver;
-  vos_SocketMode mode;
-} vos_SocketInfo;
+// typedef struct
+// {
+//   vos_SocketType type;
+//   vos_IPVersion ipver;
+//   vos_SocketMode mode;
+// } vos_SocketInfo;
 
-vos_SocketHandle vos_Socket(vos_SocketInfo* info);
-int vos_Connect(vos_SocketHandle sok, u32 ipaddr, u16 port);
-int vos_Send(vos_SocketHandle sok, void* buf, size_t len);
-int vos_Receive(vos_SocketHandle sok, void* buf, size_t maxlen);
-int vos_GetIPv4FromHost(const char* host, unsigned int* ipaddr);
-int vos_SocketClose(vos_SocketHandle sok);
+// vos_SocketHandle vos_Socket(vos_SocketInfo* info);
+// int vos_Connect(vos_SocketHandle sok, u32 ipaddr, u16 port);
+// int vos_Send(vos_SocketHandle sok, void* buf, size_t len);
+// int vos_Receive(vos_SocketHandle sok, void* buf, size_t maxlen);
+// int vos_GetIPv4FromHost(const char* host, unsigned int* ipaddr);
+// int vos_SocketClose(vos_SocketHandle sok);

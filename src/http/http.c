@@ -1,13 +1,55 @@
 #include "based_basic.h"
 #include "based_logging.h"
 #include "vos.h"
+#include "vos_socket.h"
 #include "http.h"
 
+#include <netinet/in.h>
 #include <string.h>
+#include <raylib.h>
 
+#define HTTP_RECV_BUFSIZE 4096
+
+http_Error CreateTCPSocket(vos_SocketID* sok)
+{
+    *sok = vos_Socket(AF_INET, SOCK_STREAM, 0);
+    if (*sok == VOS_INVALID_SOCKET)
+    {
+        vos_NetError err = vos_GetNetError();
+        BSD_ERR("Create socket failed with error %d", err);
+        return http_SocketFailure;
+    }
+    return http_Success;
+}
+
+http_Error http_ConnectionCreate(http_Connection** connection)
+{
+    if (connection != NULL)
+    {
+        vos_SocketClose((*connection)->sok);
+        MemFree((*connection)->recvBuf);
+        MemFree(*connection);
+    }
+
+    http_Connection* newConnection = MemAlloc(sizeof(http_Connection));
+    newConnection->recvBuf = MemAlloc(HTTP_RECV_BUFSIZE);
+
+    newConnection->cap = HTTP_RECV_BUFSIZE;
+    newConnection->len = 0;
+    newConnection->pos = 0;
+
+    http_Error err = CreateTCPSocket(&newConnection->sok);
+    if (err)
+    {
+        return err;
+    }
+
+    *connection = newConnection;
+    return http_Success;
+}
 
 // NOTE: probably needs a non-blocking API if we ever want to do anything serious over HTTP
-int http_SendRequest(const http_Request* req, http_Response* resp)
+int http_SendRequest(http_Connection* conn, const http_Request* req, http_Response* resp)
 {
     static char* methods[] =
     {
@@ -55,50 +97,43 @@ int http_SendRequest(const http_Request* req, http_Response* resp)
     
     DBG_ASSERT_MSG(reqLen <= HTTP_MAX_REQ_SIZE, "Output of snprintf is truncated");
 
-    vos_SocketInfo info;
-    info.ipver = vos_IPv4;
-    info.mode = vos_SocketModeBlocking;
-    info.type = vos_SocketTCP;
-    vos_SocketHandle sok = vos_Socket(&info);
-    if (sok == vos_INVALID_SOCKET_HANDLE)
-    {
-        BSD_ERR("Failed to create socket");
-        return -1;
-    }
-
     BSD_DBG("Trying to connect to IP: %0x", ipaddr);
-    err = vos_Connect(sok, ipaddr, HTON16(port));
+    struct sockaddr_in addr = {};
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = ipaddr;
+    addr.sin_port = HTON16(port);
+    err = vos_Connect(conn->sok, (struct sockaddr*)&addr, sizeof(struct sockaddr_in));
     if (err)
     {
         BSD_ERR("Connect failed with code %d", err);
-        vos_SocketClose(sok);
+        vos_SocketClose(conn->sok);
         return -1;
     }
 
     BSD_DBG("Connection success");
-    int bytesSent = vos_Send(sok, reqBuf, reqLen);
+    int bytesSent = vos_Send(conn->sok, reqBuf, reqLen, 0);
     if (bytesSent < 0)
     {
         BSD_ERR("Send HTTP request failed");
-        vos_SocketClose(sok);
+        vos_SocketClose(conn->sok);
         return -1;
     }
 
     char* respBuf = reqBuf; // use the same buffer, cos why not
-    int len = vos_Receive(sok, respBuf, HTTP_MAX_RESP_SIZE - 1);
+    int len = vos_Recv(conn->sok, respBuf, HTTP_MAX_RESP_SIZE - 1, 0);
     if (len <= 0)
     {
         BSD_ERR("Error while receiving HTTP response");
-        vos_SocketClose(sok);
+        vos_SocketClose(conn->sok);
         return -1;
     }
     DBG_ASSERT_MSG(len < HTTP_MAX_RESP_SIZE - 1, "Response too large to fit in buffer");
 
-    err = http_ParseResponse(sok, respBuf, len, resp);
+    err = http_ParseResponse(conn->sok, respBuf, len, resp);
     if (err)
     {
         BSD_ERR("Error while parsing HTTP response");
-        vos_SocketClose(sok);
+        vos_SocketClose(conn->sok);
     }
     return err;
 }
@@ -111,7 +146,7 @@ typedef enum
     ParsingDone,
 } http_ParseState;
 
-int http_ParseResponse(vos_SocketHandle sok, char* buf, int len, http_Response* resp)
+int http_ParseResponse(vos_SocketID sok, char* buf, int len, http_Response* resp)
 {
     DBG_ASSERT_MSG(buf != NULL, "Response buffer is NULL");
     DBG_ASSERT_MSG(resp != NULL, "Response struct is NULL");
@@ -231,7 +266,7 @@ int http_ParseResponse(vos_SocketHandle sok, char* buf, int len, http_Response* 
 
                 if (left < bodyLen)
                 {
-                    int gotLen = vos_Receive(sok, (char*)buf + len, bodyLen - left);
+                    int gotLen = vos_Recv(sok, (char*)buf + len, bodyLen - left, 0);
                     if (gotLen != bodyLen - left)
                     {
                         BSD_ERR("Could not recv the rest of the body, got len: %d", len);

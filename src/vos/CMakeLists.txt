@@ -1,4 +1,8 @@
-joker_add_lib(vos OBJECT vos_common.c)
+joker_add_lib(vos
+    OBJECT
+    vos_common.c
+    vos_socket.c
+)
 joker_target_link_raylib(vos)
 
 target_include_directories(vos PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

@@ -1,5 +1,5 @@
 #include "based_basic.h"
-#include "vos.h"
+#include "vos_socket.h"
 
 #define HTTP_MAX_REQ_SIZE 4096
 #define HTTP_MAX_RESP_SIZE HTTP_MAX_REQ_SIZE
@@ -27,5 +27,21 @@ typedef struct
     char* body;
 } http_Request;
 
-int http_SendRequest(const http_Request* req, http_Response* resp);
-int http_ParseResponse(vos_SocketHandle sok, char* buf, int len, http_Response* resp);
+typedef enum
+{
+    http_Success,
+    http_SocketFailure
+} http_Error;
+
+
+typedef struct
+{
+    u8* recvBuf;
+    u32 cap;
+    u32 len;
+    u32 pos;
+    vos_SocketID sok;
+} http_Connection;
+
+int http_SendRequest(http_Connection* conn, const http_Request* req, http_Response* resp);
+int http_ParseResponse(vos_SocketID sok, char* buf, int len, http_Response* resp);

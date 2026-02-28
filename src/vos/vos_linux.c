@@ -80,6 +80,7 @@ vos_DLLFuncPtr vos_DLLGetFunc(vos_DLLHandle handle, const char* funcName)
     return ptr;
 }
 
+#if 0
 vos_SocketHandle vos_Socket(vos_SocketInfo* info)
 {
     int domain;
@@ -305,3 +306,4 @@ int vos_GetIPv4FromHost(const char* host, unsigned int* ipaddr)
     freeaddrinfo(res);
     return 0;
 }
+#endif
