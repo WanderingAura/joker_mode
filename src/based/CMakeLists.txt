@@ -3,6 +3,7 @@ include(TargetCreationFuncs)
 joker_add_lib(based STATIC
     based_arena.c
     based_logging.c
+    based_basic.c
 )
 
 joker_target_link_raylib(based)

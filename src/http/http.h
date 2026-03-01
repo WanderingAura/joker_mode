@@ -11,6 +11,12 @@ typedef struct
     int contentLen;
 } http_Response;
 
+typedef struct
+{
+    char* key;
+    char* value;
+} http_Header;
+
 typedef enum : u32
 {
     http_MethodGET,
@@ -30,18 +36,27 @@ typedef struct
 typedef enum
 {
     http_Success,
-    http_SocketFailure
+    http_SocketFailure,
+    http_ReceiveFailed,
+    http_InvalidHeaderLine,
+    http_FailedToSendReq,
+    http_HeaderLineTooLong,
+    http_ParsingFailed,
 } http_Error;
-
 
 typedef struct
 {
-    u8* recvBuf;
+    u8* data;
     u32 cap;
     u32 len;
     u32 pos;
+} ReceiveBuffer;
+
+typedef struct
+{
+    ReceiveBuffer buf;
     vos_SocketID sok;
 } http_Connection;
 
-int http_SendRequest(http_Connection* conn, const http_Request* req, http_Response* resp);
-int http_ParseResponse(vos_SocketID sok, char* buf, int len, http_Response* resp);
+int http_ReqAndWaitForResp(http_Connection* conn, const http_Request* req, http_Response* resp);
+int http_RecvAndParse(http_Connection* conn, http_Response* resp);

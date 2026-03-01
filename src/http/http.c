@@ -3,6 +3,7 @@
 #include "vos.h"
 #include "vos_socket.h"
 #include "http.h"
+#include "stb_ds.h"
 
 #include <netinet/in.h>
 #include <string.h>
@@ -27,16 +28,16 @@ http_Error http_ConnectionCreate(http_Connection** connection)
     if (connection != NULL)
     {
         vos_SocketClose((*connection)->sok);
-        MemFree((*connection)->recvBuf);
+        MemFree((*connection)->buf.data);
         MemFree(*connection);
     }
 
     http_Connection* newConnection = MemAlloc(sizeof(http_Connection));
-    newConnection->recvBuf = MemAlloc(HTTP_RECV_BUFSIZE);
+    newConnection->buf.data = MemAlloc(HTTP_RECV_BUFSIZE);
 
-    newConnection->cap = HTTP_RECV_BUFSIZE;
-    newConnection->len = 0;
-    newConnection->pos = 0;
+    newConnection->buf.cap = HTTP_RECV_BUFSIZE;
+    newConnection->buf.len = 0;
+    newConnection->buf.pos = 0;
 
     http_Error err = CreateTCPSocket(&newConnection->sok);
     if (err)
@@ -49,7 +50,7 @@ http_Error http_ConnectionCreate(http_Connection** connection)
 }
 
 // NOTE: probably needs a non-blocking API if we ever want to do anything serious over HTTP
-int http_SendRequest(http_Connection* conn, const http_Request* req, http_Response* resp)
+int http_ReqAndWaitForResp(http_Connection* conn, const http_Request* req, http_Response* resp)
 {
     static char* methods[] =
     {
@@ -119,6 +120,12 @@ int http_SendRequest(http_Connection* conn, const http_Request* req, http_Respon
         return -1;
     }
 
+    if (bytesSent != reqLen)
+    {
+        return http_FailedToSendReq;
+    }
+
+#if 0
     char* respBuf = reqBuf; // use the same buffer, cos why not
     int len = vos_Recv(conn->sok, respBuf, HTTP_MAX_RESP_SIZE - 1, 0);
     if (len <= 0)
@@ -128,8 +135,9 @@ int http_SendRequest(http_Connection* conn, const http_Request* req, http_Respon
         return -1;
     }
     DBG_ASSERT_MSG(len < HTTP_MAX_RESP_SIZE - 1, "Response too large to fit in buffer");
+#endif
 
-    err = http_ParseResponse(conn->sok, respBuf, len, resp);
+    err = http_RecvAndParse(conn, resp);
     if (err)
     {
         BSD_ERR("Error while parsing HTTP response");
@@ -146,21 +154,182 @@ typedef enum
     ParsingDone,
 } http_ParseState;
 
-int http_ParseResponse(vos_SocketID sok, char* buf, int len, http_Response* resp)
+typedef struct
 {
-    DBG_ASSERT_MSG(buf != NULL, "Response buffer is NULL");
+    char* str;
+    u32 len;
+} http_String;
+
+static bool IsDigit(char c)
+{
+    return c >= '0' && c <= '9';
+}
+#define STR_LIT_LEN(str) (sizeof(str) - 1)
+#define HTTP_MIN_LINE_LEN STR_LIT_LEN("HTTP/1.1 200")
+s32 http_ParseStatus(http_String line)
+{
+    if (line.len < HTTP_MIN_LINE_LEN)
+    {
+        BSD_ERR("Status line too short, length %d", line.len);
+        return -1;
+    }
+    
+    static const char httpVersionStr[] = "HTTP/1.1 ";
+
+    u32 httpVerLen = STR_LIT_LEN(httpVersionStr);
+    if (memcmp(line.str, httpVersionStr, httpVerLen) != 0)
+    {
+        BSD_ERR("Unexpected HTTP version");
+        return -1;
+    }
+
+    char* statusCodeStrStart = line.str + httpVerLen;
+    char* statusCodeStrPos = statusCodeStrStart;
+    char* lineEnd = line.str + line.len;
+
+    u32 statusCode = 0;
+    // epic positive integer parser
+    while (IsDigit(*statusCodeStrPos) && statusCodeStrPos < lineEnd)
+    {
+        statusCode *= 10;
+        statusCode += *statusCodeStrPos - '0';
+    }
+
+    if (statusCodeStrStart - statusCodeStrPos != 3)
+    {
+        BSD_ERR("HTTP status is of unexpected length");
+        return -1;
+    }
+
+    if (statusCode < 100 || statusCode > 599)
+    {
+        BSD_ERR("Invalid status code");
+        return -1;
+    }
+    return statusCode;
+}
+
+http_Error GetLine(http_String* line, http_Connection* conn)
+{
+    DBG_ASSERT_MSG(conn != NULL, "NULL connection!");
+
+    bool foundNewLine = false;
+    ReceiveBuffer* buf = &conn->buf;
+
+    u32 readPos = buf->pos;
+    while (!foundNewLine)
+    {
+        if (buf->len == readPos)
+        {
+            // we need to retrieve more data
+
+            if (buf->cap == buf->len)
+            {
+                u32 remainingBytes = buf->len - buf->pos;
+                if (remainingBytes >= HTTP_RECV_BUFSIZE)
+                {
+                    // this means that the line doesn't fit inside the buffer.
+                    // we won't support header lines > buf size bytes
+                    return http_HeaderLineTooLong;
+                }
+
+                // move the remaining bytes to the start
+                // memcpy assumes non-aliasing pointers so we will do this by hand
+                for (int i = 0; i < remainingBytes; i++)
+                {
+                    buf->data[i] = buf->data[buf->pos+i];
+                }
+                buf->pos = 0;
+                buf->len = remainingBytes;
+            }
+
+            // recv data into buf
+            u32 maxRecvBytes = buf->cap - buf->len;
+            s32 recvLen = vos_Recv(conn->sok, buf->data+buf->pos, maxRecvBytes, 0);
+            if (recvLen <= 0)
+            {
+                BSD_ERR("Receive bytes failed");
+                return http_ReceiveFailed;
+            }
+
+            buf->len += recvLen;
+        }
+        
+        // we are guaranteed to have data at readPos here.
+
+        if (buf->data[readPos] == '\n')
+        {
+            if (readPos == 0 || buf->data[readPos-1] != '\r')
+            {
+                return http_InvalidHeaderLine;
+            }
+            line->str = (char*)buf->data + buf->pos;
+            line->len = readPos + 1 - buf->pos;
+            buf->pos = readPos + 1;
+            return http_Success;
+        }
+
+        readPos++;
+    }
+}
+
+#define MAX_KEY_LEN 512
+#define MAX_VAL_LEN 1024
+s32 http_ParseHeader(http_String line, http_Header* headerTable)
+{
+    char* colonPos = memchr(line.str, ':', line.len);
+
+    int keylen = colonPos - line.str;
+
+    if (keylen >= MAX_KEY_LEN)
+    {
+        BSD_ERR("Header key too long");
+        return -1;
+    }
+
+    // sh_new_arena(headerTable); we expect to be called at the higher level
+    char tmpKeyBuf[MAX_KEY_LEN];
+
+    memcpy(tmpKeyBuf, line.str, keylen);
+    tmpKeyBuf[keylen] = 0;
+
+    char* curPos = colonPos + 1;
+
+    // skip any spaces
+    while (*curPos == ' ' && curPos < line.str + line.len)
+    {
+        curPos++;
+    }
+
+    u32 remaining = line.str + line.len - curPos;
+
+    if (remaining >= MAX_VAL_LEN)
+    {
+        BSD_ERR("Header value too long");
+        return -1;
+    }
+
+    char tmpValBuf[MAX_VAL_LEN];
+    memcpy(tmpValBuf, curPos, remaining);
+    tmpValBuf[remaining] = 0;
+
+    shput(headerTable, tmpKeyBuf, tmpValBuf);
+    return 0;
+}
+
+int http_RecvAndParse(http_Connection* conn, http_Response* resp)
+{
     DBG_ASSERT_MSG(resp != NULL, "Response struct is NULL");
     DBG_ASSERT_MSG(resp->content != NULL, "Response content is uninitialised");
     DBG_ASSERT_MSG(resp->contentLen > 0, "Response content len is zero");
-    DBG_ASSERT_MSG(len <= HTTP_MAX_RESP_SIZE, "Length exceeds max size");
 
+    static http_Header* headerTable = NULL;
+    if (headerTable != NULL)
+    {
+        shfree(headerTable);
+    }
 
-    const char* readPtr = buf;
-    const char* end = readPtr + len;
-    int left = len;
-
-    BSD_DBG("Received response: %s", buf);
-    BSD_DBG("length of buf: %d", strlen(buf));
+    sh_new_arena(headerTable);
 
     http_ParseState state = ParsingStatusLine;
     s64 bodyLen = -1;
@@ -170,111 +339,46 @@ int http_ParseResponse(vos_SocketID sok, char* buf, int len, http_Response* resp
         {
             case ParsingStatusLine:
             {
-                if (len < 4 || memcmp("HTTP", buf, 4) != 0)
+                http_String line = {};
+                http_Error err = GetLine(&line, conn);
+                if (err)
                 {
-                    BSD_ERR("Received non-HTTP response!");
-                    goto error;
-                }
-                char* nextLine = memchr(readPtr, '\n', left) + 1;
-                if (nextLine >= end)
-                {
-                    BSD_ERR("Failed to find new line after status line");
-                    goto error;
-                }
-                char* statusCodeStr = memchr(readPtr, ' ', left) + 1;
-                if (statusCodeStr >= nextLine)
-                {
-                    BSD_ERR("Parsing error: Failed to find status code");
-                    goto error;
+                    return err;
                 }
 
-                char* endOfNumber;
-                s64 statusCode = strtol(statusCodeStr, &endOfNumber, 10);
-
-                if (statusCodeStr == endOfNumber)
+                s32 statusCode = http_ParseStatus(line);
+                if (statusCode < 0)
                 {
-                    BSD_ERR("Status Code could not be parsed as a number");
-                    goto error;
+                    return http_ParsingFailed;
                 }
-
-                if (statusCode < 100 || statusCode > 511)
-                {
-                    BSD_ERR("Status Code out of range: %ld", statusCode);
-                }
-
                 resp->status = statusCode;
-                left -= nextLine - readPtr;
-                readPtr = nextLine;
-                // TODO: if we have a status code that causes a possibly empty body we should
-                // skip straight to the end
                 state = ParsingHeaders;
             } break;
             case ParsingHeaders:
             {
-                if (readPtr + 1 < end && *readPtr == '\r' && *(readPtr+1) == '\n')
+                http_String line;
+                http_Error err = GetLine(&line, conn);
+                if (err)
                 {
-                    readPtr += 2;
-                    left -= 2;
+                    return err;
+                }
+
+                if (line.len == 0)
+                {
                     state = ParsingBody;
-                    break;
                 }
-                char* nextLine = memchr(readPtr, '\n', left) + 1;
-                if (NULL)
+                else
                 {
-                    BSD_ERR("Failed to find next line after header line");
-                    goto error;
-                }
-
-                int lineLen = nextLine - readPtr;
-                if (lineLen > sizeof("Content-Length:") &&
-                    memcmp(readPtr, "Content-Length:", strlen("Content-Length:")) == 0)
-                {
-                    // found the content length field
-                    char* valueStart = memchr(readPtr, ' ', lineLen) + 1;
-                    if (valueStart >= nextLine)
+                    s32 err = http_ParseHeader(line, headerTable);
+                    if (err)
                     {
-                        BSD_ERR("Could not find the value for Content-Length field");
-                        goto error;
+                        return http_ParsingFailed;
                     }
-
-                    char* endOfNumber;
-                    bodyLen = strtol(valueStart, &endOfNumber, 10);
-                    if (valueStart == endOfNumber)
-                    {
-                        BSD_ERR("Content-Length could not be parsed as a number");
-                        goto error;
-                    }
-                    // WARNING: bad actor may overflow bodylen, but whatever we'll just let them figure
-                    // figure out how they can exploit us
                 }
-
-                left -= nextLine - readPtr;
-                readPtr = nextLine;
             } break;
             case ParsingBody:
             {
-                if (bodyLen < 0)
-                {
-                    BSD_ERR("Received HTTP request with unknown body length");
-                    goto error;
-                }
-                if (left >= resp->contentLen)
-                {
-                    BSD_ERR("The content of this response is too large");
-                    goto error;
-                }
 
-                if (left < bodyLen)
-                {
-                    int gotLen = vos_Recv(sok, (char*)buf + len, bodyLen - left, 0);
-                    if (gotLen != bodyLen - left)
-                    {
-                        BSD_ERR("Could not recv the rest of the body, got len: %d", len);
-                        goto error;
-                    }
-                }
-                
-                memcpy(resp->content, readPtr, bodyLen);
                 state = ParsingDone;
             } break;
             default:
