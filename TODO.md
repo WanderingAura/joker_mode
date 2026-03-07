@@ -22,7 +22,13 @@
 - [ ] Possible improvements later on
     - [ ] Chunk the world so that only the closest 9 chunks are loaded. Chunks should be large enough that all walls have lenght less than half a chunk. (this will be needed if we get levels large enough for collision checks to be laggy).
 
-- [ ] make a cross platform socket library with recv buffering
-    - [ ] make a data type for the recv buffer: maybe an array which gets flushed whenever the read pointer gets to the end
-    - [ ] just make a blocking API for now, we can make it non-blocking later, if we need
-- [ ] make an http library
+- [x] make a cross platform socket library with recv buffering
+    - [x] make a data type for the recv buffer: maybe an array which gets flushed whenever the read pointer gets to the end
+    - [x] just make a blocking API for now, we can make it non-blocking later, if we need
+- [x] make an http library
+
+- [x] update the game over screen to load scores from the server
+- [ ] update the game over screen to be able to input your username
+- [ ] once username is inputted, it should be added to the highscores, maybe the server should only ever store top 100 scores.
+  - [ ] could look into pagination later
+- [ ] set up duckdns domain for hiscore server and make the server a systemd service on my pi

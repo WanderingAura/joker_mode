@@ -6,16 +6,23 @@
 
 typedef struct
 {
-    int status;
-    char* content;
-    int contentLen;
-} http_Response;
+    char* str;
+    u32 len;
+} http_String;
 
 typedef struct
 {
     char* key;
     char* value;
 } http_Header;
+
+typedef struct
+{
+    int status;
+    http_String content;
+    http_Header* headers;
+} http_Response;
+
 
 typedef enum : u32
 {
@@ -30,7 +37,7 @@ typedef struct
     char hostURL[64];
     u16 port;
     http_Method method;
-    char* body;
+    http_String body;
 } http_Request;
 
 typedef enum
@@ -59,4 +66,6 @@ typedef struct
 } http_Connection;
 
 int http_ReqAndWaitForResp(http_Connection* conn, const http_Request* req, http_Response* resp);
-int http_RecvAndParse(http_Connection* conn, http_Response* resp);
+http_Error http_ConnectionCreate(http_Connection** connection);
+void http_ResponseFree(http_Response* resp);
+void http_ConnectionClose(http_Connection* connection);

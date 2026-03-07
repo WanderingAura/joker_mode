@@ -6,10 +6,50 @@
 #include "stb_ds.h"
 
 #include <netinet/in.h>
+#include <stdio.h>
 #include <string.h>
 #include <raylib.h>
 
 #define HTTP_RECV_BUFSIZE 4096
+#define MAX_BODY_LEN 8192
+
+int http_RecvAndParse(http_Connection* conn, http_Response* resp);
+
+// reads the body length into the buffer
+http_Error ReadBody(char* dest, http_Connection* conn, u32 len)
+{
+    ReceiveBuffer* buf = &conn->buf;
+    u32 remaining = buf->len - buf->pos;
+
+    if (remaining >= len)
+    {
+        memcpy(dest, buf->data + buf->pos, len);
+        buf->pos += len;
+        return 0;
+    }
+
+    // flush the buffer, then recv the rest
+
+    memcpy(dest, buf->data + buf->pos, remaining);
+    dest += remaining;
+    buf->pos += remaining;
+
+    s32 toRecv = len - remaining;
+
+    while (toRecv > 0)
+    {
+        s32 recvLen = vos_Recv(conn->sok, dest, toRecv, 0);
+        if (recvLen < 0)
+        {
+            return http_ReceiveFailed;
+        }
+
+        dest += recvLen;
+        toRecv -= recvLen;
+    }
+
+    return 0;
+}
 
 http_Error CreateTCPSocket(vos_SocketID* sok)
 {
@@ -25,7 +65,7 @@ http_Error CreateTCPSocket(vos_SocketID* sok)
 
 http_Error http_ConnectionCreate(http_Connection** connection)
 {
-    if (connection != NULL)
+    if (*connection != NULL)
     {
         vos_SocketClose((*connection)->sok);
         MemFree((*connection)->buf.data);
@@ -47,6 +87,13 @@ http_Error http_ConnectionCreate(http_Connection** connection)
 
     *connection = newConnection;
     return http_Success;
+}
+
+void http_ConnectionClose(http_Connection* connection)
+{
+    vos_SocketClose(connection->sok);
+    MemFree(connection->buf.data);
+    MemFree(connection);
 }
 
 // NOTE: probably needs a non-blocking API if we ever want to do anything serious over HTTP
@@ -80,16 +127,24 @@ int http_ReqAndWaitForResp(http_Connection* conn, const http_Request* req, http_
     char reqBuf[HTTP_MAX_REQ_SIZE];
 
     // TODO: fill this in with any relevant headers
-    char headers[HTTP_MAX_REQ_SIZE] = "Connection: close\n";
+    char headers[HTTP_MAX_REQ_SIZE] = "Connection: close\r\n";
+
+    int headerLen = strlen(headers);
+
+    if (req->body.str)
+    {
+        int writtenBytes = sprintf(headers+headerLen, "Content-Length: %d\r\n", req->body.len);
+    }
 
     int reqLen = snprintf(
         reqBuf,
         HTTP_MAX_REQ_SIZE,
-        "%s / HTTP/1.1\r\n"
+        "%s %s HTTP/1.1\r\n"
         "Host: %s:%d\r\n"
         "%s"
         "\r\n",
         methods[req->method],
+        req->hostURL,
         req->hostName,
         port,
         headers);
@@ -125,6 +180,23 @@ int http_ReqAndWaitForResp(http_Connection* conn, const http_Request* req, http_
         return http_FailedToSendReq;
     }
 
+    if (req->body.str)
+    {
+        bytesSent = vos_Send(conn->sok, req->body.str, req->body.len, 0);
+        if (bytesSent < 0)
+        {
+            BSD_ERR("Send HTTP request body failed");
+            vos_SocketClose(conn->sok);
+            return -1;
+        }
+
+        if (bytesSent != req->body.len)
+        {
+            BSD_ERR("Failed to send entire request body, got %d, expected %d", bytesSent, req->body.len);
+            return -1;
+        }
+    }
+
 #if 0
     char* respBuf = reqBuf; // use the same buffer, cos why not
     int len = vos_Recv(conn->sok, respBuf, HTTP_MAX_RESP_SIZE - 1, 0);
@@ -153,12 +225,6 @@ typedef enum
     ParsingBody,
     ParsingDone,
 } http_ParseState;
-
-typedef struct
-{
-    char* str;
-    u32 len;
-} http_String;
 
 static bool IsDigit(char c)
 {
@@ -193,9 +259,10 @@ s32 http_ParseStatus(http_String line)
     {
         statusCode *= 10;
         statusCode += *statusCodeStrPos - '0';
+        statusCodeStrPos++;
     }
 
-    if (statusCodeStrStart - statusCodeStrPos != 3)
+    if (statusCodeStrPos - statusCodeStrStart != 3)
     {
         BSD_ERR("HTTP status is of unexpected length");
         return -1;
@@ -264,22 +331,26 @@ http_Error GetLine(http_String* line, http_Connection* conn)
                 return http_InvalidHeaderLine;
             }
             line->str = (char*)buf->data + buf->pos;
-            line->len = readPos + 1 - buf->pos;
+            // minus 2 to skip the newline chars
+            line->len = readPos + 1 - buf->pos - 2;
             buf->pos = readPos + 1;
             return http_Success;
         }
-
         readPos++;
     }
+
+    return http_ParsingFailed;
 }
 
+static stbds_string_arena http_arena = {};
 #define MAX_KEY_LEN 512
 #define MAX_VAL_LEN 1024
-s32 http_ParseHeader(http_String line, http_Header* headerTable)
+s32 http_ParseHeader(http_String line, http_Header** headerTable)
 {
     char* colonPos = memchr(line.str, ':', line.len);
 
-    int keylen = colonPos - line.str;
+
+    u32 keylen = colonPos - line.str;
 
     if (keylen >= MAX_KEY_LEN)
     {
@@ -313,26 +384,29 @@ s32 http_ParseHeader(http_String line, http_Header* headerTable)
     memcpy(tmpValBuf, curPos, remaining);
     tmpValBuf[remaining] = 0;
 
-    shput(headerTable, tmpKeyBuf, tmpValBuf);
+    char* value = stbds_stralloc(&http_arena, tmpValBuf);
+
+    BSD_INF("Setting headers key %s val %s", tmpKeyBuf, tmpValBuf);
+    shput(*headerTable, tmpKeyBuf, value);
+
+    BSD_INF("Got headers key %s val %s", tmpKeyBuf, shget(*headerTable, tmpKeyBuf));
     return 0;
 }
 
+// http_RespFree() needs to be called on the response struct
 int http_RecvAndParse(http_Connection* conn, http_Response* resp)
 {
     DBG_ASSERT_MSG(resp != NULL, "Response struct is NULL");
-    DBG_ASSERT_MSG(resp->content != NULL, "Response content is uninitialised");
-    DBG_ASSERT_MSG(resp->contentLen > 0, "Response content len is zero");
+    DBG_ASSERT_MSG(resp->content.str == NULL, "memory leak danger!");
+    DBG_ASSERT_MSG(resp->headers == NULL, "memory leak danger!");
 
-    static http_Header* headerTable = NULL;
-    if (headerTable != NULL)
-    {
-        shfree(headerTable);
-    }
-
-    sh_new_arena(headerTable);
 
     http_ParseState state = ParsingStatusLine;
     s64 bodyLen = -1;
+    http_Error ret = http_Success;
+
+    sh_new_arena(resp->headers);
+
     while (state != ParsingDone)
     {
         switch (state)
@@ -343,13 +417,15 @@ int http_RecvAndParse(http_Connection* conn, http_Response* resp)
                 http_Error err = GetLine(&line, conn);
                 if (err)
                 {
-                    return err;
+                    ret = err;
+                    goto error;
                 }
 
                 s32 statusCode = http_ParseStatus(line);
                 if (statusCode < 0)
                 {
-                    return http_ParsingFailed;
+                    ret = http_ParsingFailed;
+                    goto error;
                 }
                 resp->status = statusCode;
                 state = ParsingHeaders;
@@ -360,7 +436,8 @@ int http_RecvAndParse(http_Connection* conn, http_Response* resp)
                 http_Error err = GetLine(&line, conn);
                 if (err)
                 {
-                    return err;
+                    ret = err;
+                    goto error;
                 }
 
                 if (line.len == 0)
@@ -369,15 +446,42 @@ int http_RecvAndParse(http_Connection* conn, http_Response* resp)
                 }
                 else
                 {
-                    s32 err = http_ParseHeader(line, headerTable);
+                    s32 err = http_ParseHeader(line, &resp->headers);
                     if (err)
                     {
-                        return http_ParsingFailed;
+                        ret = http_ParsingFailed;
+                        goto error;
                     }
                 }
             } break;
             case ParsingBody:
             {
+                char* contentLenStr =  shget(resp->headers, "Content-Length");
+                if (!contentLenStr)
+                {
+                    BSD_ERR("Could not find content length header");
+                    ret = http_ParsingFailed;
+                    goto error;
+                }
+
+                char* numEnd;
+                long contentLen = strtol(contentLenStr, &numEnd, 10);
+                if (contentLen > MAX_BODY_LEN)
+                {
+                    ret = http_ParsingFailed;
+                    goto error;
+                }
+
+                DBG_ASSERT_MSG(resp->content.str == NULL, "library interally allocates");
+                resp->content.str = MemAlloc(contentLen);
+                http_Error err = ReadBody(resp->content.str, conn, contentLen);
+                if (err)
+                {
+                    MemFree(resp->content.str);
+                    ret = err;
+                    goto error;
+                }
+                resp->content.len = contentLen;
 
                 state = ParsingDone;
             } break;
@@ -394,5 +498,23 @@ done:
     return 0;
 
 error:
-    return -1;
+    shfree(resp->headers);
+    resp->headers = NULL;
+    DBG_ASSERT_MSG(ret != http_Success, "returning success on error!");
+    return ret;
+}
+
+void http_ResponseFree(http_Response* resp)
+{
+    if (resp->headers)
+    {
+        shfree(resp->headers);
+        resp->headers = NULL;
+    }
+    if (resp->content.str)
+    {
+        free(resp->content.str);
+        resp->content.str = NULL;
+    }
+    stbds_strreset(&http_arena);
 }

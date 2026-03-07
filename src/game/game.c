@@ -1,4 +1,5 @@
 #include <raylib.h>
+#include <stdio.h>
 #include <string.h>
 #include <raymath.h>
 
@@ -11,6 +12,7 @@
 #include "core_tilemap.h"
 #include "core_entity_template.h"
 #include "efs_entity.h"
+#include "http.h"
 
 #if defined(__linux__)
   #define SOC_EXPORT
@@ -123,8 +125,14 @@ SOC_EXPORT void soc_GameMemoryInit(soc_GameMemory* memory)
     memset(memory, 0, sizeof(soc_GameMemory));
     core_TexturesInit(memory);
     memory->camera = (Camera2D){0};
+    memory->gameoverData.usernameLen = 0;
 
     memory->menuState = MenuState_Title;
+
+// #if 1
+//     memory->menuState = MenuState_GameOver;
+//     memory->levelTimer = 0.1f;
+// #endif
 
     BSD_INF("Game memory initialised!");
 }
@@ -253,6 +261,7 @@ void MainGameUpdate(soc_GameMemory* memory)
     if (memory->player && memory->player->health <= 0)
     {
         memory->menuState = MenuState_GameOver;
+        memory->gameoverData.state = GameoverState_InputScore;
     }
 
     BeginDrawing();
@@ -293,23 +302,232 @@ void TitleScreenUpdate(soc_GameMemory* memory)
     EndDrawing();
 }
 
-void GameoverScreenUpdate(soc_GameMemory* memory)
+static bool IsDigit(char c)
 {
-    int screenWidth = (float)GetScreenWidth();
-    int screenHeight = (float)GetScreenHeight();
+    return c >= '0' && c <= '9';
+}
 
+s32 ParseScoresLine(ScoreInfo* info, char* buf, u32 len)
+{
+    char* comma = memchr(buf, ',', len);
+    if (!comma)
+    {
+        return 1;
+    }
+
+    u32 usernameLen = comma - buf;
+
+    if (usernameLen >= sizeof(info->username))
+    {
+        BSD_ERR("Username too long!");
+        return 1;
+    }
+
+    char* curPos = comma+1;
+    u32 score = 0;
+    while (IsDigit(*curPos))
+    {
+        score *= 10;
+        score += *curPos++ - '0';
+    }
+    memcpy(info->username, buf, usernameLen);
+    info->score = score;
+    return 0;
+}
+
+void GameoverLoadScores(GameoverData* data)
+{
+    data->gotScores = false;
+    http_Connection* conn = {}; // fix this mem leak
+    http_Error err = http_ConnectionCreate(&conn);
+    DBG_ASSERT_MSG(err == http_Success, "Connection setup failed");
+    http_Request req = {};
+    req.method = http_MethodGET;
+    req.body.str = NULL;
+    req.port = 8080;
+    strcpy(req.hostName, "192.168.1.7");
+    strcpy(req.hostURL, "/v1/hiscores");
+    http_Response resp = {};
+    err = http_ReqAndWaitForResp(conn, &req, &resp);
+    if (err)
+    {
+        BSD_ERR("HTTP req failed with error %d", err);
+    }
+    else if (resp.status != 200)
+    {
+        BSD_ERR("HTTP response returned non-success status code: %d", resp.status);
+    }
+    else
+    {
+        // got response, will parse csv body into ScoreInfo
+
+        char* curPos = resp.content.str;
+        u32 remaining = resp.content.len;
+        
+        u32 scoreIndex = 0;
+        while (curPos < curPos + resp.content.len && scoreIndex < 10)
+        {
+            char* nextLine = memchr(curPos, '\n', remaining);
+            if (!nextLine)
+            {
+                BSD_WARN("Possibility of truncated line");
+                break;
+            }
+
+            // move to start of next line
+            nextLine += 1;
+
+            u32 lineLen = nextLine - curPos;
+
+            ParseScoresLine(&data->topScores[scoreIndex], curPos, lineLen);
+
+            scoreIndex++;
+            curPos = nextLine;
+            data->gotScores = true;
+        }
+        http_ResponseFree(&resp);
+    }
+    http_ConnectionClose(conn);
+
+    if (data->gotScores)
+    {
+        data->state = GameoverState_ShowScores;
+    }
+    else
+    {
+        data->state = GameoverState_NoScores;
+    }
+}
+
+void GameoverShowScores(GameoverData* data)
+{
     int key = GetKeyPressed();
     if (key != 0)
     {
-        memory->menuState = MenuState_Title;
+        core_GameMemoryGet()->menuState = MenuState_Title;
+    }
+    BeginDrawing();
+        ClearBackground(BLUE);
+        const int startX = 100;
+        const int startY = 120;
+        const int rowHeight = 32;
+
+        const int nameX = startX;
+        const int scoreX = startX + 300;
+
+        DrawText("Game Over!", startX, 60, 40, RAYWHITE);
+
+        for (u32 i = 0; i < ArrayCount(data->topScores); i++)
+        {
+            int y = startY + i * rowHeight;
+
+            // username
+            DrawText(data->topScores[i].username, nameX, y, 24, WHITE);
+
+            // score
+            DrawText(TextFormat("%u", data->topScores[i].score), scoreX, y, 24, YELLOW);
+        }
+        const int userScoreY = startY + ArrayCount(data->topScores) * rowHeight;
+        DrawText(data->userScore.username, nameX, userScoreY, 24, ORANGE);
+        DrawText(TextFormat("%u", data->userScore.score), scoreX, userScoreY, 24, YELLOW);
+
+    EndDrawing();
+}
+
+void GameoverScreenNoScores(GameoverData* data)
+{
+    int key = GetKeyPressed();
+    if (key != 0)
+    {
+        core_GameMemoryGet()->menuState = MenuState_Title;
+    }
+    BeginDrawing();
+        ClearBackground(BLUE);
+        DrawText("GAME OVER", 300, 200, 60, DARKBLUE);
+        DrawText(TextFormat("Score: %d seconds", data->userScore.score), 200, 300, 40, GREEN);
+        DrawText("PRESS ANY KEY TO RETURN TO TITLE SCREEN", 120, 350, 20, DARKBLUE);
+    EndDrawing();
+}
+
+#define MAX_INPUT_CHARS 10
+void GameoverInputScore(GameoverData* data)
+{
+    static int framesCounter = 0;
+    int key = GetCharPressed();
+    char* name = data->userScore.username;
+    int screenWidth = GetScreenWidth();
+    Rectangle textBox = { screenWidth/2.0f - 100, 180, 225, 50 };
+
+    while (key > 0)
+    {
+        if (key >= 32 && key <= 125 && data->usernameLen < MAX_INPUT_CHARS)
+        {
+            name[data->usernameLen] = (char)key;
+            name[data->usernameLen+1] = 0;
+            data->usernameLen++;
+        }
+        key = GetCharPressed();
+    }
+
+    if (IsKeyPressed(KEY_BACKSPACE))
+    {
+        data->usernameLen--;
+        if (data->usernameLen < 0) data->usernameLen = 0;
+        name[data->usernameLen] = 0;
+    }
+    if (IsKeyPressed(KEY_ENTER))
+    {
+        // username should already be in the userScore struct
+        data->userScore.score = (int)core_GameMemoryGet()->levelTimer * 100;
+        data->state = GameoverState_LoadingScore;
     }
 
     BeginDrawing();
-        DrawRectangle(0, 0, screenWidth, screenHeight, BLUE);
-        DrawText("GAME OVER", 300, 200, 60, DARKBLUE);
-        DrawText(TextFormat("Time survived: %.1f seconds", memory->levelTimer), 200, 300, 40, GREEN);
-        DrawText("PRESS ANY KEY TO RETURN TO TITLE SCREEN", 120, 350, 20, DARKBLUE);
+        ClearBackground(BLUE);
+        DrawText("Game Over!", 100, 60, 40, RAYWHITE);
+        DrawText("Enter your username to record your score!", 200, 150, 20, RAYWHITE);
+        DrawRectangleRec(textBox, LIGHTGRAY);
+        DrawRectangleLines((int)textBox.x, (int)textBox.y, (int)textBox.width, (int)textBox.height, RED);
+        DrawText(name, (int)textBox.x + 5, (int)textBox.y + 8, 40, MAROON);
+        if (data->usernameLen < MAX_INPUT_CHARS)
+        {
+            // Draw blinking underscore char
+            if (((framesCounter/20)%2) == 0) DrawText("_", (int)textBox.x + 8 + MeasureText(name, 40), (int)textBox.y + 12, 40, MAROON);
+        }
     EndDrawing();
+}
+
+void UpdateGameoverData(GameoverData* data)
+{
+    switch(data->state)
+    {
+        case GameoverState_InputScore:
+        {
+            GameoverInputScore(data);
+        } break;
+        case GameoverState_LoadingScore:
+        {
+            GameoverLoadScores(data);
+        } break;
+        case GameoverState_ShowScores:
+        {
+            GameoverShowScores(data);
+        } break;
+        case GameoverState_NoScores:
+            GameoverScreenNoScores(data);
+        break;
+    }
+}
+
+void GameoverLoadingUpdate(soc_GameMemory* memory)
+{
+    (void)memory;
+    // BeginDrawing();
+    //     DrawRectangle(0, 0, screenWidth, screenHeight, BLUE);
+    //     DrawText("GAME OVER", 300, 200, 60, DARKBLUE);
+    //     DrawText(TextFormat("Time survived: %.1f seconds", memory->levelTimer), 200, 300, 40, GREEN);
+    //     DrawText("PRESS ANY KEY TO RETURN TO TITLE SCREEN", 120, 350, 20, DARKBLUE);
+    // EndDrawing();
 }
 
 SOC_EXPORT void soc_GameUpdate(soc_GameMemory* memory)
@@ -324,9 +542,13 @@ SOC_EXPORT void soc_GameUpdate(soc_GameMemory* memory)
         {
             MainGameUpdate(memory);
         } break;
+        case MenuState_GameOverLoading:
+        {
+            GameoverLoadingUpdate(memory);
+        } break;
         case MenuState_GameOver:
         {
-            GameoverScreenUpdate(memory);
+            UpdateGameoverData(&memory->gameoverData);
         } break;
     }
 
