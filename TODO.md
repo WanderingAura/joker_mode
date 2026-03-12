@@ -28,7 +28,7 @@
 - [x] make an http library
 
 - [x] update the game over screen to load scores from the server
-- [ ] update the game over screen to be able to input your username
-- [ ] once username is inputted, it should be added to the highscores, maybe the server should only ever store top 100 scores.
+- [x] update the game over screen to be able to input your username
+- [x] once username is inputted, it should be added to the highscores.
   - [ ] could look into pagination later
-- [ ] set up duckdns domain for hiscore server and make the server a systemd service on my pi
+- [x] set up duckdns domain for hiscore server and make the server a systemd service on my pi

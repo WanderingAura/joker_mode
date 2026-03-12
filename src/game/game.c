@@ -387,6 +387,35 @@ void GameoverLoadScores(GameoverData* data)
         }
         http_ResponseFree(&resp);
     }
+
+    http_ConnectionClose(conn);
+    conn = NULL;
+    // TODO: please use the same connection and sort out the net code to be idempotent!!!
+    // currently doing this cos it throws an already connected err
+    http_ConnectionCreate(&conn);
+
+    // NOTE: the hostname/url fields will be the same so we use the same struct
+    // TODO: just use a freaking arena
+    req.body.str = MemAlloc(256);
+    int len = snprintf(req.body.str, 256, "%s,%d\r\n", data->userScore.username, data->userScore.score);
+    req.body.len = len;
+    req.method = http_MethodPOST;
+
+    http_Response postResp = {};
+    err = http_ReqAndWaitForResp(conn, &req, &resp);
+    if (err)
+    {
+        BSD_ERR("HTTP POST req failed with error %d", err);
+    }
+    else if (resp.status != 200)
+    {
+        BSD_ERR("HTTP POST req response returned non-success status code: %d", resp.status);
+    }
+    else
+    {
+        BSD_INF("Posted score to server!");
+        http_ResponseFree(&postResp);
+    }
     http_ConnectionClose(conn);
 
     if (data->gotScores)
@@ -417,19 +446,37 @@ void GameoverShowScores(GameoverData* data)
 
         DrawText("Game Over!", startX, 60, 40, RAYWHITE);
 
+        bool drawnUserScore = false;
         for (u32 i = 0; i < ArrayCount(data->topScores); i++)
         {
             int y = startY + i * rowHeight;
 
+            if (!drawnUserScore && data->userScore.score > data->topScores[i].score)
+            {
+                DrawText(data->userScore.username, nameX, y, 24, ORANGE);
+                DrawText(TextFormat("%u", data->userScore.score), scoreX, y, 24, YELLOW);
+                drawnUserScore = true;
+                continue;
+            }
+
+            int topScoresIdx = i;
+            if (drawnUserScore)
+            {
+                topScoresIdx--;
+            }
             // username
-            DrawText(data->topScores[i].username, nameX, y, 24, WHITE);
+            DrawText(data->topScores[topScoresIdx].username, nameX, y, 24, WHITE);
 
             // score
-            DrawText(TextFormat("%u", data->topScores[i].score), scoreX, y, 24, YELLOW);
+            DrawText(TextFormat("%u", data->topScores[topScoresIdx].score), scoreX, y, 24, YELLOW);
         }
-        const int userScoreY = startY + ArrayCount(data->topScores) * rowHeight;
-        DrawText(data->userScore.username, nameX, userScoreY, 24, ORANGE);
-        DrawText(TextFormat("%u", data->userScore.score), scoreX, userScoreY, 24, YELLOW);
+
+        if (!drawnUserScore)
+        {
+            const int userScoreY = startY + ArrayCount(data->topScores) * rowHeight;
+            DrawText(data->userScore.username, nameX, userScoreY, 24, ORANGE);
+            DrawText(TextFormat("%u", data->userScore.score), scoreX, userScoreY, 24, YELLOW);
+        }
 
     EndDrawing();
 }
@@ -478,7 +525,7 @@ void GameoverInputScore(GameoverData* data)
     if (IsKeyPressed(KEY_ENTER))
     {
         // username should already be in the userScore struct
-        data->userScore.score = (int)core_GameMemoryGet()->levelTimer * 100;
+        data->userScore.score = (int)(core_GameMemoryGet()->levelTimer * 100.0f);
         data->state = GameoverState_LoadingScore;
     }
 
