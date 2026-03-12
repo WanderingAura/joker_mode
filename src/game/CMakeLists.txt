@@ -6,6 +6,7 @@ joker_target_link_raylib(soc)
 target_sources(soc PRIVATE
     core_game_memory.c
     game.c
+    gameover.c
 )
 
 target_link_libraries(soc PRIVATE based efs gameplay game_api level render soc_http vos)
