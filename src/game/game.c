@@ -140,8 +140,8 @@ SOC_EXPORT void soc_GameMemoryInit(soc_GameMemory* memory)
 void MainGameUpdate(soc_GameMemory* memory)
 {
     memory->levelTimer += GetFrameTime();
-    static int count = 0;
-    if (count % (60*2) == 0)
+    static int frameCount = 0;
+    if (frameCount % (60*2) == 0)
     {
         Vector2 position = {GetRandomValue(-50, 850), GetRandomValue(-50, 650)};
         Vector2 direction = Vector2Rotate((Vector2){1.0f, 0.0f}, GetRandomValue(0, 360));
@@ -150,7 +150,7 @@ void MainGameUpdate(soc_GameMemory* memory)
         spawner = ProjectileSpawnerCreate(SpawnerNormal, position, direction, spawnedInfo);
         efs_PoolAdd(&memory->efs_entityPool, spawner);
     }
-    else if (count % (60*3) == 0)
+    else if (frameCount % (60*3) == 0)
     {
         Vector2 position = {GetRandomValue(100, 500), GetRandomValue(100, 400)};
         Vector2 direction = Vector2Rotate((Vector2){1.0f, 0.0f}, GetRandomValue(0, 360));
@@ -159,7 +159,7 @@ void MainGameUpdate(soc_GameMemory* memory)
         spawner = ProjectileSpawnerCreate(SpawnerNormal, position, direction, spawnedInfo);
         efs_PoolAdd(&memory->efs_entityPool, spawner);
     }
-    count++;
+    frameCount++;
     //Entity updates
     {
         efs_Entity* player = memory->player;
