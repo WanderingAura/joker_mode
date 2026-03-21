@@ -385,10 +385,10 @@ s32 http_ParseHeader(http_String line, http_Header** headerTable)
 
     char* value = stbds_stralloc(&http_arena, tmpValBuf);
 
-    BSD_INF("Setting headers key %s val %s", tmpKeyBuf, tmpValBuf);
+    BSD_DBG("Setting headers key %s val %s", tmpKeyBuf, tmpValBuf);
     shput(*headerTable, tmpKeyBuf, value);
 
-    BSD_INF("Got headers key %s val %s", tmpKeyBuf, shget(*headerTable, tmpKeyBuf));
+    BSD_DBG("Got headers key %s val %s", tmpKeyBuf, shget(*headerTable, tmpKeyBuf));
     return 0;
 }
 
