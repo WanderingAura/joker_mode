@@ -13,6 +13,7 @@
 #include "core_entity_template.h"
 #include "efs_entity.h"
 #include "gameover.h"
+#include "vos_socket.h"
 
 #if defined(__linux__)
   #define SOC_EXPORT
@@ -213,7 +214,7 @@ void MainGameUpdate(soc_GameMemory* memory)
                 if (entity->timeSinceLastSpawn >= entity->spawnTime)
                 {
                     entity->timeSinceLastSpawn = 0;
-                    efs_Entity spawned = {};
+                    efs_Entity spawned = {0};
                     memcpy(&spawned, entity->childInfo.template, sizeof(efs_Entity));
                     spawned.dir = entity->childInfo.initialDir;
                     spawned.pos = Vector2Add(entity->pos, entity->childInfo.offset);

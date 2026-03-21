@@ -16,13 +16,13 @@ int main(void)
         return 1;
     }
 
-    http_Request req = {};
+    http_Request req = {0};
     strcpy(req.hostName, "192.168.1.7");
     strcpy(req.hostURL, "/v1/hiscores/get");
     req.method = http_MethodGET;
     req.port = 8080;
 
-    http_Response resp = {};
+    http_Response resp = {0};
 
     err = http_ReqAndWaitForResp(conn, &req, &resp);
     if (err)

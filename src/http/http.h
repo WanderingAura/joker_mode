@@ -3,6 +3,8 @@
 
 #define HTTP_MAX_REQ_SIZE 4096
 #define HTTP_MAX_RESP_SIZE HTTP_MAX_REQ_SIZE
+#define HTTP_MAX_HOST_NAME 64
+#define HTTP_MAX_HOST_URL 64
 
 typedef struct
 {
@@ -24,7 +26,7 @@ typedef struct
 } http_Response;
 
 
-typedef enum : u32
+typedef enum
 {
     http_MethodGET,
     http_MethodPOST,
@@ -33,8 +35,8 @@ typedef enum : u32
 
 typedef struct
 {
-    char hostName[64];
-    char hostURL[64];
+    char hostName[HTTP_MAX_HOST_NAME];
+    char hostURL[HTTP_MAX_HOST_URL];
     u16 port;
     http_Method method;
     http_String body;

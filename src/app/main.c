@@ -1,6 +1,7 @@
 #include "game_api.h"
 #include "raylib.h"
 #include "vos.h"
+#include "vos_socket.h"
 #include <assert.h>
 #include <stdio.h>
 
@@ -69,9 +70,19 @@ GameFuncs GetGameFuncs(vos_DLLHandle dll)
 
 int main(void)
 {
+
     const int screenWidth = 800;
     const int screenHeight = 600;
+#ifdef WLIAS_DEBUG
     bsd_SetLogLevel(bsd_LogLevel_Debug);
+#endif
+
+    vos_NetError err = vos_NetInit();
+    if (err != vos_NetErrorSuccess)
+    {
+        BSD_ERR("Failed to initialise net api err: %d", err);
+        return 1;
+    }
 
     InitWindow(screenWidth, screenHeight, "hot reload test");
     SetTargetFPS(60);

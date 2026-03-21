@@ -1,6 +1,11 @@
+#include "based_basic.h"
 #include "http.h"
 #include "core_game_memory.h"
 #include <string.h>
+
+#define HISCORE_SERVER_HOST "sochiscore.duckdns.org"
+#define HISCORE_SERVER_PORT 49445
+#define HISCORE_SERVER_ENDPOINT "/v1/hiscores"
 
 static bool IsDigit(char c)
 {
@@ -39,16 +44,18 @@ s32 ParseScoresLine(ScoreInfo* info, char* buf, u32 len)
 void GameoverLoadScores(GameoverData* data)
 {
     data->gotScores = false;
-    http_Connection* conn = {}; // fix this mem leak
+    http_Connection* conn = {0}; // fix this mem leak
     http_Error err = http_ConnectionCreate(&conn);
     DBG_ASSERT_MSG(err == http_Success, "Connection setup failed");
-    http_Request req = {};
+    http_Request req = {0};
     req.method = http_MethodGET;
     req.body.str = NULL;
-    req.port = 8080;
-    strcpy(req.hostName, "192.168.1.7");
-    strcpy(req.hostURL, "/v1/hiscores");
-    http_Response resp = {};
+    req.port = HISCORE_SERVER_PORT;
+    // we're using snprintf here to stop MSVC from complaining about strcpy/strncpy deprecation.
+    // kinda makes sense because strncpy doesn't do what i originally thought it did (it always copies n chars)
+    snprintf(req.hostName, ArrayCount(req.hostName), HISCORE_SERVER_HOST);
+    snprintf(req.hostURL, ArrayCount(req.hostURL), HISCORE_SERVER_ENDPOINT);
+    http_Response resp = {0};
     err = http_ReqAndWaitForResp(conn, &req, &resp);
     if (err)
     {
@@ -102,7 +109,7 @@ void GameoverLoadScores(GameoverData* data)
     req.body.len = len;
     req.method = http_MethodPOST;
 
-    http_Response postResp = {};
+    http_Response postResp = {0};
     err = http_ReqAndWaitForResp(conn, &req, &resp);
     if (err)
     {

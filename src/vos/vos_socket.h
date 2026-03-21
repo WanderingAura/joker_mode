@@ -4,6 +4,35 @@
 #include <stdbool.h>
 #include "based_basic.h"
 
+
+#if defined(__BYTE_ORDER__)
+  #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+    #define VOS_BIG_ENDIAN
+  #else
+    #define VOS_LITTLE_ENDIAN
+  #endif
+#elif defined(_MSC_VER) // it's safe to assume windows is always little endian
+  #define VOS_LITTLE_ENDIAN
+#else
+  #error "Cannot determine endianess"
+#endif
+
+#ifdef VOS_LITTLE_ENDIAN
+#define HTON16(x) \
+  (u16)((((x) & 0x00ffu) << 8) | \
+        (((x) & 0xff00u) >> 8) )
+
+#define HTON32(x) \
+  (u32)((((x) & 0x000000fful) << 24) | \
+        (((x) & 0x0000ff00ul) << 8)  | \
+        (((x) & 0x00ff0000ul) >> 8)  | \
+        (((x) & 0xff000000ul) >> 24))
+
+#else
+#define HTON16(x)
+#define HTON32(x)
+#endif
+
 typedef enum
 {
     vos_NetErrorSuccess = 0,
@@ -26,13 +55,25 @@ typedef int vos_SocketID;
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <netinet/in.h>
 #elif defined(_WIN32)
+// stupid stuff we need to do because raylib has naming conflicts with win32 api
+// (disables the symbols which conflict)
+#define WIN32_LEAN_AND_MEAN
+#define NOGDI
+#define NOUSER
+#define NOSOUND
+#pragma comment(lib, "Ws2_32.lib")
+#include <WS2tcpip.h>
 #include <winsock2.h>
 typedef SOCKET vos_SocketID;
+typedef int socklen_t;
+#define VOS_INVALID_SOCKET INVALID_SOCKET
 #else
 #error "unknown OS"
 #endif
 
+vos_NetError vos_NetInit();
 vos_SocketID vos_Socket(int domain, int type, int protocol);
 vos_NetError vos_SocketClose(vos_SocketID sok);
 

@@ -15,3 +15,6 @@ if (NOT raylib_POPULATED) # Have we downloaded raylib yet?
   set(FETCHCONTENT_QUIET NO)
   FetchContent_MakeAvailable(raylib)
 endif()
+
+# we need to unset this to allow other libraries to be built statically by default
+set(BUILD_SHARED_LIBS OFF)

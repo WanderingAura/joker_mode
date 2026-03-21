@@ -5,7 +5,6 @@
 #include "http.h"
 #include "stb_ds.h"
 
-#include <netinet/in.h>
 #include <stdio.h>
 #include <string.h>
 #include <raylib.h>
@@ -154,7 +153,7 @@ int http_ReqAndWaitForResp(http_Connection* conn, const http_Request* req, http_
     DBG_ASSERT_MSG(reqLen <= HTTP_MAX_REQ_SIZE, "Output of snprintf is truncated");
 
     BSD_DBG("Trying to connect to IP: %0x", ipaddr);
-    struct sockaddr_in addr = {};
+    struct sockaddr_in addr = {0};
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = ipaddr;
     addr.sin_port = HTON16(port);
@@ -342,7 +341,7 @@ http_Error GetLine(http_String* line, http_Connection* conn)
     return http_ParsingFailed;
 }
 
-static stbds_string_arena http_arena = {};
+static stbds_string_arena http_arena = {0};
 #define MAX_KEY_LEN 512
 #define MAX_VAL_LEN 1024
 s32 http_ParseHeader(http_String line, http_Header** headerTable)
@@ -413,7 +412,7 @@ int http_RecvAndParse(http_Connection* conn, http_Response* resp)
         {
             case ParsingStatusLine:
             {
-                http_String line = {};
+                http_String line = {0};
                 http_Error err = GetLine(&line, conn);
                 if (err)
                 {
@@ -513,7 +512,7 @@ void http_ResponseFree(http_Response* resp)
     }
     if (resp->content.str)
     {
-        free(resp->content.str);
+        MemFree(resp->content.str);
         resp->content.str = NULL;
     }
     stbds_strreset(&http_arena);

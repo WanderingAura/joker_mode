@@ -13,7 +13,7 @@ typedef int vos_SocketID;
 typedef struct pollfd vos_PollFD;
 #elif defined(_WIN32)
 typedef SOCKET vos_SocketID;
-typedef WSAPOLLFD pfd;
+typedef WSAPOLLFD vos_PollFD;
 #define vos_Poll(fd, num, timeout) WSAPoll(fd, num, timeout)
 #define vos_INVALID_SOCKET INVALID_SOCKET
 #else
@@ -25,14 +25,14 @@ vos_NetError vos_NetInit()
     vos_NetError rc = vos_NetErrorSuccess;
 #ifdef _WIN32
     WSADATA wsaData;
-    ret = WSAStartup(MAKEWORD(2,2), &wsaData);
+    rc = WSAStartup(MAKEWORD(2,2), &wsaData);
 #endif
     return rc;
 }
 
 vos_NetError NetErrFromPlatformErr(int errCode)
 {
-    vos_NetError err = {};
+    vos_NetError err = {0};
 #ifdef __linux__
     switch (errCode)
     {
@@ -92,7 +92,7 @@ vos_NetError NetErrFromPlatformErr(int errCode)
     switch (errCode)
     {
         case WSAEINPROGRESS:
-        case WSAEWOULDBLOCK
+        case WSAEWOULDBLOCK:
         {
             err = vos_NetErrorInProgress;
         }
@@ -111,7 +111,7 @@ vos_NetError NetErrFromPlatformErr(int errCode)
 
 vos_NetError vos_GetNetError()
 {
-    vos_NetError err = {};
+    vos_NetError err = {0};
 #ifdef __linux__
     int osErr = errno;
 #elif defined(_WIN32)
@@ -164,8 +164,8 @@ vos_NetError vos_SocketSetBlocking(vos_SocketID sok, bool blocking)
 
     rc = fcntl(sok, F_SETFL, flags);
 #elif defined(_WIN32)
-    u64 mode = blocking ? 0UL : 1UL;
-    int rc = ioctlsocket(sok, FIONBIO, &mode);
+    u_long mode = blocking ? 0UL : 1UL;
+    rc = ioctlsocket(sok, FIONBIO, &mode);
 #endif
 
     if (rc != 0)
@@ -175,7 +175,7 @@ vos_NetError vos_SocketSetBlocking(vos_SocketID sok, bool blocking)
     return vos_NetErrorSuccess;
 }
 
-vos_NetError vos_Connect(vos_SocketID sok, const sockaddr* addr, int addrlen)
+vos_NetError vos_Connect(vos_SocketID sok, const struct sockaddr* addr, int addrlen)
 {
     int rc = connect(sok, addr, addrlen);
     if (rc != 0)
@@ -186,7 +186,7 @@ vos_NetError vos_Connect(vos_SocketID sok, const sockaddr* addr, int addrlen)
 }
 
 
-vos_NetError vos_ConnectWithTimeout(vos_SocketID sok, const sockaddr* addr, int addrlen, u32 timeout_ms)
+vos_NetError vos_ConnectWithTimeout(vos_SocketID sok, const struct sockaddr* addr, int addrlen, u32 timeout_ms)
 {
     DBG_ASSERT_MSG(timeout_ms < 30000, "Timeout too high");
 
@@ -216,7 +216,7 @@ vos_NetError vos_ConnectWithTimeout(vos_SocketID sok, const sockaddr* addr, int 
         return err;
     }
 
-    vos_PollFD pfd = {};
+    vos_PollFD pfd = {0};
     pfd.fd = sok;
     pfd.events = POLLOUT;
 
@@ -236,7 +236,7 @@ vos_NetError vos_ConnectWithTimeout(vos_SocketID sok, const sockaddr* addr, int 
 
     int soError = 0;
     socklen_t soErrorLen = sizeof(soError);
-    if (getsockopt(sok, SOL_SOCKET, SO_ERROR, &soError, &soErrorLen) < 0)
+    if (getsockopt(sok, SOL_SOCKET, SO_ERROR, (void*)&soError, &soErrorLen) < 0) // void* is for windows being windows
     {
         vos_NetError err = vos_GetNetError();
         vos_SocketSetBlocking(sok, true);
@@ -276,7 +276,7 @@ vos_NetError vos_SocketClose(vos_SocketID sok)
 int vos_GetIPv4FromHost(const char* host, unsigned int* ipaddr)
 {
     struct addrinfo* res;
-    struct addrinfo hints = {};
+    struct addrinfo hints = {0};
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
 

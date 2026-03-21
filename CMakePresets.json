@@ -60,6 +60,7 @@
     {
       "name": "compile_commands",
       "inherits": "debug",
+      "generator": "Ninja",
       "cacheVariables": {
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
