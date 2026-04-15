@@ -157,7 +157,7 @@ int http_ReqAndWaitForResp(http_Connection* conn, const http_Request* req, http_
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = ipaddr;
     addr.sin_port = HTON16(port);
-    err = vos_Connect(conn->sok, (struct sockaddr*)&addr, sizeof(struct sockaddr_in));
+    err = vos_ConnectWithTimeout(conn->sok, (struct sockaddr*)&addr, sizeof(struct sockaddr_in), 1000);
     if (err)
     {
         BSD_ERR("Connect failed with code %d", err);

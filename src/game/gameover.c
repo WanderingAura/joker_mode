@@ -2,6 +2,7 @@
 #include "http.h"
 #include "core_game_memory.h"
 #include <string.h>
+#include <math.h>
 
 #define HISCORE_SERVER_HOST "sochiscore.duckdns.org"
 #define HISCORE_SERVER_PORT 49445
@@ -196,12 +197,16 @@ void GameoverScreenNoScores(GameoverData* data)
     {
         core_GameMemoryGet()->menuState = MenuState_Title;
     }
+    static int alphaCount = 0;
+    float alpha = ( (sinf((float)alphaCount / 10.0f) + 1.0f )* 0.5f );
     BeginDrawing();
         ClearBackground(BLUE);
-        DrawText("GAME OVER", 300, 200, 60, DARKBLUE);
-        DrawText(TextFormat("Score: %d seconds", data->userScore.score), 200, 300, 40, GREEN);
-        DrawText("PRESS ANY KEY TO RETURN TO TITLE SCREEN", 120, 350, 20, DARKBLUE);
+        DrawText("GAME OVER", 200, 200, 60, DARKBLUE);
+        DrawText("Failed to connect to hiscores server...", 200, 100, 20, DARKBLUE);
+        DrawText(TextFormat("Score: %d", data->userScore.score), 200, 300, 40, GREEN);
+        DrawText("PRESS ANY KEY TO RETURN TO TITLE SCREEN", 120, 500, 20, Fade(DARKBLUE, alpha));
     EndDrawing();
+    alphaCount++;
 }
 
 #define MAX_INPUT_CHARS 10

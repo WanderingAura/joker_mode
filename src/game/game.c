@@ -295,12 +295,14 @@ void TitleScreenUpdate(soc_GameMemory* memory)
         memory->menuState = MenuState_MainGame;
         InitDemoLevel(memory);
     }
-
+    static int alphaCount = 0;
+    float alpha = ( (sinf((float)alphaCount / 10.0f) + 1.0f )* 0.5f );
     BeginDrawing();
         DrawRectangle(0, 0, screenWidth, screenHeight, GREEN);
-        DrawText("TITLE SCREEN", 20, 20, 40, DARKGREEN);
-        DrawText("PRESS ANY KEY TO START", 120, 220, 20, DARKGREEN);
+        DrawText("JOKER MODE", 250, 200, 40, DARKGREEN);
+        DrawText("PRESS ANY KEY TO START", 250, 500, 20, Fade(DARKGREEN, alpha));
     EndDrawing();
+    alphaCount++;
 }
 
 

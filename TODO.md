@@ -32,3 +32,5 @@
 - [x] once username is inputted, it should be added to the highscores.
   - [ ] could look into pagination later
 - [x] set up duckdns domain for hiscore server and make the server a systemd service on my pi
+
+- [ ] add a window icon (does linux have this?)

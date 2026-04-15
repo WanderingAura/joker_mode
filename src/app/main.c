@@ -84,7 +84,7 @@ int main(void)
         return 1;
     }
 
-    InitWindow(screenWidth, screenHeight, "hot reload test");
+    InitWindow(screenWidth, screenHeight, "Joker Mode");
     SetTargetFPS(60);
 
     vos_DLLHandle gameDLL = vos_DLLLoad(GAME_DLL_FILE_NAME);
