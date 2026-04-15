@@ -26,6 +26,9 @@ has nmake and cl.exe available.
 build.bat <debug|release>
 ```
 
+Once you have built once successfully `build_unity.bat` can be run to rebuild the game dll: soc.dll. This is surprisingly soooo much faster
+than the incremental build cmake offers. This was added to make hot reloading nearly instant on Windows.
+
 # Building on Linux
 Prerequisites:
 - CMake
