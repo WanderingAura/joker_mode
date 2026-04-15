@@ -1,3 +1,4 @@
+#pragma once
 #include "based_basic.h"
 #include "vos_socket.h"
 

@@ -1,3 +1,4 @@
+#pragma once
 typedef enum {
     // defines the different texture types e.g. TextureGrass
 #   define _TextureType(type) Texture##type,

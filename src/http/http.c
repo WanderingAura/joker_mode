@@ -225,10 +225,6 @@ typedef enum
     ParsingDone,
 } http_ParseState;
 
-static bool IsDigit(char c)
-{
-    return c >= '0' && c <= '9';
-}
 #define STR_LIT_LEN(str) (sizeof(str) - 1)
 #define HTTP_MIN_LINE_LEN STR_LIT_LEN("HTTP/1.1 200")
 s32 http_ParseStatus(http_String line)
@@ -254,7 +250,7 @@ s32 http_ParseStatus(http_String line)
 
     u32 statusCode = 0;
     // epic positive integer parser
-    while (IsDigit(*statusCodeStrPos) && statusCodeStrPos < lineEnd)
+    while (bsd_IsDigit(*statusCodeStrPos) && statusCodeStrPos < lineEnd)
     {
         statusCode *= 10;
         statusCode += *statusCodeStrPos - '0';

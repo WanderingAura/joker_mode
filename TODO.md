@@ -34,3 +34,6 @@
 - [x] set up duckdns domain for hiscore server and make the server a systemd service on my pi
 
 - [ ] add a window icon (does linux have this?)
+- [x] fix windows rebuild being horribly slow (use unity build)
+- [ ] add support for unity build on linux
+- [ ] auto generate the unity build (don't use cmake because that's bloated af on windows)

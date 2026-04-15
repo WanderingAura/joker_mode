@@ -1,6 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 #include "based_logging.h"
 
 /* ==== BASIC TYPES ==== */
@@ -43,3 +44,5 @@ typedef s64 b64;
 #else
 #define DBG_ASSERT_MSG(cond, msg)
 #endif
+
+bool bsd_IsDigit(char c);
