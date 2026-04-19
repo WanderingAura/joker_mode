@@ -5,8 +5,8 @@
 #include <math.h>
 
 #define HISCORE_SERVER_HOST "sochiscore.duckdns.org"
-#define HISCORE_SERVER_PORT 49445
-#define HISCORE_SERVER_ENDPOINT "/v1/hiscores"
+#define HISCORE_SERVER_PORT 49944
+#define HISCORE_SERVER_ENDPOINT "/hiscores"
 
 static bool IsDigit(char c)
 {
@@ -64,7 +64,8 @@ void GameoverLoadScores(GameoverData* data)
     }
     else if (resp.status != 200)
     {
-        BSD_ERR("HTTP response returned non-success status code: %d", resp.status);
+        BSD_ERR("HTTP response returned non-success status code: %d, body: %.*s", resp.status, resp.content.len, resp.content.str);
+        http_ResponseFree(&resp);
     }
     else
     {
@@ -173,11 +174,14 @@ void GameoverShowScores(GameoverData* data)
             {
                 topScoresIdx--;
             }
-            // username
-            DrawText(data->topScores[topScoresIdx].username, nameX, y, 24, WHITE);
+            if (data->topScores[topScoresIdx].username[0] != 0)
+            {
+                // username
+                DrawText(data->topScores[topScoresIdx].username, nameX, y, 24, WHITE);
 
-            // score
-            DrawText(TextFormat("%u", data->topScores[topScoresIdx].score), scoreX, y, 24, YELLOW);
+                // score
+                DrawText(TextFormat("%u", data->topScores[topScoresIdx].score), scoreX, y, 24, YELLOW);
+            }
         }
 
         if (!drawnUserScore)
