@@ -39,3 +39,6 @@
 - [ ] auto generate the unity build (don't use cmake because that's bloated af on windows)
 
 - [ ] fix the game over leaderboard screen so that it displays less than 10 hiscores if there are < 10
+- [x] change debugging logs to be dynamic at runtime based on env var
+
+- [ ] refactor the entity pooling logic to have the pool allocator only responsible for the free list and the active list should be implemented by the user code. asked chatgpt their opinion on this and its take seems pretty reasonable: https://chatgpt.com/share/69b6f89a-86bc-8004-8526-74ba06309d0e.

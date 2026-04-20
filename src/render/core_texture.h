@@ -1,4 +1,4 @@
 #pragma once
-#include "core_game_memory.h"
+#include "raylib.h"
 
-void core_TexturesInit(soc_GameMemory* memory);
+void core_TexturesInit(Texture2D* textures);
