@@ -8,6 +8,48 @@
 #define LOG_LINE_LEN_MAX 4096
 static bsd_LogLevel currentLogLevel = bsd_LogLevel_Info;
 
+void bsd_LoggingInit()
+{
+    char* dbgLevel = getenv("SOC_DBG_LEVEL");
+    if (dbgLevel != NULL)
+    {
+        switch (dbgLevel[0])
+        {
+            case 'd':
+            {
+                currentLogLevel = bsd_LogLevel_Debug;
+            }
+            break;
+            case 'i':
+            {
+                currentLogLevel = bsd_LogLevel_Info;
+            }
+            break;
+            case 'w':
+            {
+                currentLogLevel = bsd_LogLevel_Warning;
+            }
+            break;
+            case 'e':
+            {
+                currentLogLevel = bsd_LogLevel_Error;
+            }
+            break;
+            case 'c':
+            {
+                currentLogLevel = bsd_LogLevel_Critical;
+
+            }
+            break;
+            default:
+            {
+                fprintf(stderr, "unrecognised debug level: %s\n", dbgLevel);
+            }
+            break;
+        }
+    }
+}
+
 void bsd_SetLogLevel(bsd_LogLevel level)
 {
     currentLogLevel = level;
