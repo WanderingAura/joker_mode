@@ -12,6 +12,7 @@
 #include "core_tilemap.h"
 #include "core_entity_template.h"
 #include "efs_entity.h"
+#include "efs_entity_props.h"
 #include "gameover.h"
 #include "render_font.h"
 
@@ -49,7 +50,6 @@ void InitEntities(soc_GameMemory* memory)
 {
     //DEFINE guy
     efs_Entity guy = { 0 };
-    efs_EntitySetProperty(&guy, efs_prop_CanMove);
     efs_EntitySetProperty(&guy, efs_prop_PlayerControlled);
     efs_EntitySetProperty(&guy, efs_prop_HasHealth);
     efs_EntitySetProperty(&guy, efs_prop_ShootsAtMouse);
@@ -126,7 +126,8 @@ void InitDemoLevel(soc_GameMemory* memory)
 
 SOC_EXPORT void soc_GameMemoryInit(soc_GameMemory* memory)
 {
-    // Updates the library's pointer to game memory
+    // updates the library's pointer to game memory
+    // this allows hot reloading to work
     core_GameMemorySet(memory);
 
     // TODO: change this to be dynamic based on something??
@@ -146,6 +147,38 @@ SOC_EXPORT void soc_GameMemoryInit(soc_GameMemory* memory)
 // #endif
 
     BSD_INF("Game memory initialised!");
+}
+
+void EntityMove(efs_Entity* entity, float modifier)
+{
+    float stepAmount = entity->baseMoveSpeed * GetFrameTime();
+    if (efs_EntityHasProperty(entity, efs_prop_ScalesWithDifficulty))
+    {
+        stepAmount *= 1 + modifier;
+    }
+    Vector2 entityStep = Vector2Scale(entity->dir, stepAmount);
+    entity->pos.x += entityStep.x;
+    entity->pos.y += entityStep.y;
+}
+
+bool RectCollidesWall(Rectangle rect, efs_EntityPool* entityPool, Vector2* collideDir)
+{
+    collideDir->x = 0;
+    collideDir->y = 0;
+    int index = entityPool->activeHead;
+    while (index >= 0)
+    {
+        efs_Entity* wallEntity = &entityPool->entities[index];
+        if (efs_EntityHasProperty(wallEntity, efs_prop_SolidWall))
+        {
+            if (CheckCollisionRecs(rect, wallEntity->rect))
+            {
+                return true;
+            }
+        }
+        index = wallEntity->next;
+    }
+    return true;
 }
 
 void MainGameUpdate(soc_GameMemory* memory)
@@ -201,20 +234,14 @@ void MainGameUpdate(soc_GameMemory* memory)
                 }
                 entity->dir = Vector2Normalize(entity->dir);
                 memory->camera.target = entity->pos;
+
             }
             if (efs_EntityHasProperty(entity, efs_prop_HasRotation))
             {
                 entity->dir = Vector2Rotate(entity->dir, entity->baseRotationSpeed * GetFrameTime());
             }
             if(efs_EntityHasProperty(entity, efs_prop_CanMove)) {
-                float stepAmount = entity->baseMoveSpeed * GetFrameTime();
-                if (efs_EntityHasProperty(entity, efs_prop_ScalesWithDifficulty))
-                {
-                    stepAmount *= 1 + memory->levelTimer/10;
-                }
-                Vector2 entityStep = Vector2Scale(entity->dir, stepAmount);
-                entity->pos.x += entityStep.x;
-                entity->pos.y += entityStep.y;
+                EntityMove(entity, memory->levelTimer/20.0f);
             }
             if (efs_EntityHasProperty(entity, efs_prop_HasLifetime))
             {
