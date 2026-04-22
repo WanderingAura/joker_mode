@@ -5,6 +5,7 @@
 #include "core_texture_types.h"
 #include "core_entity_types.h"
 #include "core_menu_state.h"
+#include "render_font_types.h"
 
 typedef struct
 {
@@ -24,6 +25,12 @@ typedef struct
     u32 score;
 } ScoreInfo;
 
+typedef struct
+{
+    ScoreInfo topScores[10];
+    ScoreInfo userScore;
+} Scoreboard;
+
 typedef enum
 {
     GameoverState_InputScore,
@@ -34,8 +41,7 @@ typedef enum
 
 typedef struct
 {
-    ScoreInfo topScores[10];
-    ScoreInfo userScore;
+    Scoreboard scoreboard;
     int usernameLen;
     bool gotScores;
 
@@ -45,6 +51,7 @@ typedef struct
 typedef struct {
     core_Tilemap tilemap;
     Texture2D textures[TextureTypeCount];
+    Font fonts[FontTypeCount];
     efs_EntityPool efs_entityPool;
     efs_Entity* player;
     Camera2D camera;

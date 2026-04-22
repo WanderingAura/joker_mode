@@ -1,8 +1,7 @@
 #include "core_texture.h"
 #include "based_basic.h"
 #include "based_logging.h"
-#include "core_game_memory.h"
-#include "raylib.h"
+#include "core_texture_types.h"
 
 void core_TexturesInit(Texture2D* textures)
 {

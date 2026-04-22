@@ -4,6 +4,8 @@ joker_target_link_raylib(render)
 target_sources(render PRIVATE
     core_texture_types.c
     core_texture.c
+    render_font_types.c
+    render_font.c
 )
 
 target_link_libraries(render PRIVATE based efs game_api)
