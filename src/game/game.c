@@ -124,7 +124,7 @@ SOC_EXPORT void soc_GameMemoryInit(soc_GameMemory* memory)
     bsd_SetLogLevel(bsd_LogLevel_Debug);
 
     memset(memory, 0, sizeof(soc_GameMemory));
-    core_TexturesInit(memory);
+    core_TexturesInit(memory->textures);
     memory->camera = (Camera2D){0};
     memory->gameoverData.usernameLen = 0;
 
