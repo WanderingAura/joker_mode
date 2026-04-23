@@ -60,7 +60,7 @@ void InitEntities(soc_GameMemory* memory)
     guy.rect.height = 64.0f;
     guy.rect.width = 64.0f;
     guy.baseMoveSpeed = 300.0f;
-    guy.texture = memory->textures[TextureGuy];
+    guy.texture = memory->textures[TextureVGolfer];
     efs_PoolAdd(&memory->efs_entityPool, guy);
 
     // // store a pointer to the player so that it's easily accessed

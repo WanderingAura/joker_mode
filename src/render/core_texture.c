@@ -23,6 +23,7 @@ void core_TexturesInit(Texture2D* textures)
     textures[TextureProjectile] = LoadTextureFromImage(projImg);
     textures[TextureProjectileSpawner] = LoadTextureFromImage(spawnerImg);
     textures[TextureWall] = LoadTextureFromImage(wallImg);
+    textures[TextureVGolfer] = LoadTexture("assets/V1.png");
     SetTextureWrap(textures[TextureWall], TEXTURE_WRAP_REPEAT);
 
     UnloadImage(spawnerImg);
