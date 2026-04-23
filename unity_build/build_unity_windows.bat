@@ -6,8 +6,6 @@
 :: This script must be run inside of a developer terminal (i.e. it can see cl.exe)
 :: And raylib.dll must already be built via the proper build command
 
-:: Your build commands here
-
 
 @echo off
 setlocal enabledelayedexpansion
