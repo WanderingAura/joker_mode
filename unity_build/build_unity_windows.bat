@@ -5,7 +5,18 @@
 
 :: This script must be run inside of a developer terminal (i.e. it can see cl.exe)
 :: And raylib.dll must already be built via the proper build command
-cl.exe /I"src/based" /I"src/efs" /I"src/game" /I"src/gameplay" /I"src/http" /I"src/level" /I"src/render" /I"src/vos" ^
+
+set "VSWHERE=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
+
+for /f "usebackq tokens=*" %%i in (`"%VSWHERE%" -latest -products * -property installationPath`) do (
+    call "%%i\Common7\Tools\VsDevCmd.bat"
+)
+
+:: Your build commands here
+
+powershell -NoProfile -ExecutionPolicy Bypass -File generate_unity.ps1 ..\src
+
+cl.exe /I"../src/based" /I"../src/efs" /I"../src/game" /I"../src/gameplay" /I"../src/http" /I"../src/level" /I"../src/render" /I"../src/vos" ^
     /I"build/debug/_deps/raylib-build/raylib/include" ^
     /LD ^
     /std:c11 /permissive- ^
