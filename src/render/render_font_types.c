@@ -2,7 +2,7 @@
 #include "based_basic.h"
 #include <assert.h>
 
-static char* texture_type_strs[FontTypeCount] =
+static char* font_type_strs[FontTypeCount] =
 {
     // Stringified names for the texture enum e.g. "GrassTexture"
 #   define _FontType(type) STRINGIFY(type##FontType),
@@ -13,5 +13,5 @@ static char* texture_type_strs[FontTypeCount] =
 const char* FontTypeToString(rnd_FontType type)
 {
     assert((u32)type < FontTypeCount);
-    return texture_type_strs[type];
+    return font_type_strs[type];
 }

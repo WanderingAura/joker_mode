@@ -35,7 +35,7 @@
 
 - [ ] add a window icon (does linux have this?)
 - [x] fix windows rebuild being horribly slow (use unity build)
-- [ ] add support for unity build on linux
+- [x] add support for unity build on linux
 - [ ] auto generate the unity build (don't use cmake because that's bloated af on windows)
 
 - [ ] fix the game over leaderboard screen so that it displays less than 10 hiscores if there are < 10

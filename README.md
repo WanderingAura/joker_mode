@@ -1,6 +1,6 @@
-# Joker Mode
+# The Vigilantes
 
-A game where you go joker mode.
+A game about the slippery slope of punishing crime.
 
 - Supports hot reloading: updating the code while it's still running!
 - Supports hiscores to be posted to an HTTP server
@@ -27,8 +27,7 @@ has nmake and cl.exe available.
 build.bat <debug|release>
 ```
 
-Once you have built once successfully `build_unity.bat` can be run to rebuild the game dll: soc.dll. This is surprisingly soooo much faster
-than the incremental build cmake offers. This was added to make hot reloading nearly instant on Windows.
+~~Once you have built once successfully `build_unity.bat` can be run to rebuild the game dll: soc.dll. This is surprisingly soooo much faster than the incremental build cmake offers. This was added to make hot reloading nearly instant on Windows.~~ (WIP: need to make unity build auto update when there are new files)
 
 # Building on Linux
 Prerequisites:
