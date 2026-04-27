@@ -9,12 +9,15 @@
 #include "core_game_memory.h"
 #include "core_menu_state.h"
 #include "core_texture.h"
+#include "core_texture_types.h"
 #include "core_tilemap.h"
 #include "core_entity_template.h"
 #include "efs_entity.h"
 #include "efs_entity_props.h"
 #include "gameover.h"
 #include "render_font.h"
+#include "lvl_collision.h"
+#include "core_wall.h"
 
 #if defined(__linux__)
   #define SOC_EXPORT
@@ -50,6 +53,7 @@ void InitEntities(soc_GameMemory* memory)
 {
     //DEFINE guy
     efs_Entity guy = { 0 };
+    efs_EntitySetProperty(&guy, efs_prop_CanMove);
     efs_EntitySetProperty(&guy, efs_prop_PlayerControlled);
     efs_EntitySetProperty(&guy, efs_prop_HasHealth);
     efs_EntitySetProperty(&guy, efs_prop_ShootsAtMouse);
@@ -79,6 +83,9 @@ void InitEntities(soc_GameMemory* memory)
         .dir = {0,1}};
     efs_Entity spawner = ProjectileSpawnerCreate(SpawnerNormal, middleOfScreen, (Vector2){1.0f, 0.0f}, spawnedInfo);
     efs_PoolAdd(&memory->efs_entityPool, spawner);
+
+    efs_Entity wall = CreateWall((Rectangle){100.0f, 100.0f, 100.0f, 100.0f}, memory->textures[TextureWall]);
+    efs_PoolAdd(&memory->efs_entityPool, wall);
 }
 
 void DrawBounds(BoundingRect bounds)
@@ -149,6 +156,39 @@ SOC_EXPORT void soc_GameMemoryInit(soc_GameMemory* memory)
     BSD_INF("Game memory initialised!");
 }
 
+void MoveAndResolveCollisions(efs_Entity* player, efs_EntityPool* pool)
+{
+    float stepAmount = player->baseMoveSpeed * GetFrameTime();
+    Vector2 entityStep = Vector2Scale(player->dir, stepAmount);
+
+    player->pos.x += entityStep.x;
+
+    int entityIdx = pool->activeHead;
+    while(entityIdx >= 0) {
+        efs_Entity* wall = &pool->entities[entityIdx];
+        if (efs_EntityHasProperty(wall, efs_prop_Solid))
+        {
+            if (CheckCollisionRecs(wall->rect, player->rect))
+            {
+                player->pos.x += lvl_CollisionAdjust(player->pos.x, player->rect.width, wall->pos.x, wall->rect.width);
+            }
+        }
+        entityIdx = wall->next;
+    }
+    player->pos.y += entityStep.y;
+    while(entityIdx >= 0) {
+        efs_Entity* wall = &pool->entities[entityIdx];
+        if (efs_EntityHasProperty(wall, efs_prop_Solid))
+        {
+            if (CheckCollisionRecs(wall->rect, player->rect))
+            {
+                player->pos.y += lvl_CollisionAdjust(player->pos.y, player->rect.height, wall->pos.y, wall->rect.height);
+            }
+        }
+        entityIdx = wall->next;
+    }
+}
+
 void EntityMove(efs_Entity* entity, float modifier)
 {
     float stepAmount = entity->baseMoveSpeed * GetFrameTime();
@@ -169,7 +209,7 @@ bool RectCollidesWall(Rectangle rect, efs_EntityPool* entityPool, Vector2* colli
     while (index >= 0)
     {
         efs_Entity* wallEntity = &entityPool->entities[index];
-        if (efs_EntityHasProperty(wallEntity, efs_prop_SolidWall))
+        if (efs_EntityHasProperty(wallEntity, efs_prop_Solid))
         {
             if (CheckCollisionRecs(rect, wallEntity->rect))
             {
@@ -235,13 +275,23 @@ void MainGameUpdate(soc_GameMemory* memory)
                 entity->dir = Vector2Normalize(entity->dir);
                 memory->camera.target = entity->pos;
 
+                MoveAndResolveCollisions(entity, &memory->efs_entityPool);
             }
             if (efs_EntityHasProperty(entity, efs_prop_HasRotation))
             {
                 entity->dir = Vector2Rotate(entity->dir, entity->baseRotationSpeed * GetFrameTime());
             }
-            if(efs_EntityHasProperty(entity, efs_prop_CanMove)) {
+            // if not a player we update it normally
+            if(efs_EntityHasProperty(entity, efs_prop_CanMove) && !efs_EntityHasProperty(entity, efs_prop_PlayerControlled)) {
                 EntityMove(entity, memory->levelTimer/20.0f);
+            }
+            if (efs_EntityHasProperty(entity, efs_prop_Solid) && player)
+            {
+                if (CheckCollisionRecs(entity->rect, player->rect))
+                {
+                    player->pos.x += lvl_CollisionAdjust(player->pos.x, player->rect.width, entity->pos.x, entity->rect.width);
+                    player->pos.y += lvl_CollisionAdjust(player->pos.y, player->rect.height, entity->pos.y, entity->rect.height);
+                }
             }
             if (efs_EntityHasProperty(entity, efs_prop_HasLifetime))
             {

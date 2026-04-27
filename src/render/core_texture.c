@@ -17,7 +17,7 @@ void core_TexturesInit(Texture2D* textures)
 
     Image spawnerImg = GenImageColor(32, 32, ORANGE);
     Image projImg = GenImageColor(16, 16, RED);
-    Image wallImg = GenImageColor(16, 16, BLACK);
+    Image wallImg = GenImageColor(16, 16, YELLOW);
     textures[TextureGrass] = LoadTexture("assets/grass.png");
     textures[TextureGuy] = LoadTexture("assets/bloke.png");
     textures[TextureProjectile] = LoadTextureFromImage(projImg);

@@ -3,6 +3,7 @@ joker_target_link_raylib(level)
 
 target_sources(level PRIVATE
     core_tilemap.c
+    lvl_collision.c
 )
 
 target_link_libraries(level PRIVATE based efs game_api)

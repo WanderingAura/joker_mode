@@ -5,7 +5,8 @@
 efs_Entity CreateWall(Rectangle rect, Texture2D texture)
 {
     efs_Entity wall = {};
-    efs_EntitySetProperty(&wall, efs_prop_SolidWall);
+    efs_EntitySetProperty(&wall, efs_prop_Solid);
     wall.rect = rect;
+    wall.texture = texture;
     return wall;
 }

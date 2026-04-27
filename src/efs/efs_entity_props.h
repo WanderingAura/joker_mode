@@ -22,6 +22,6 @@ typedef enum {
     efs_prop_TempInvincible,
     efs_prop_DespawnWhenFarFromPlayer,
     efs_prop_ScalesWithDifficulty,
-    efs_prop_SolidWall,
+    efs_prop_Solid, // stops the player from moving through it
     efs_prop_ShootsAtMouse
 } efs_PropertyType;

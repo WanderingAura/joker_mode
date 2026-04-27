@@ -3,6 +3,7 @@ joker_target_link_raylib(gameplay)
 
 target_sources(gameplay PRIVATE
     core_entity_template.c
+    core_wall.c
 )
 
 target_link_libraries(gameplay PRIVATE based efs game_api)
