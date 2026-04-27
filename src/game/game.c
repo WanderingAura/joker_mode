@@ -261,7 +261,7 @@ void MainGameUpdate(soc_GameMemory* memory)
                 if (efs_EntityHasProperty(target, efs_prop_HasHealth)
                     && !efs_EntityHasProperty(target, efs_prop_TempInvincible)
                     && efs_EntityHasProperty(entity, efs_prop_CanDamage)                
-                    && entity->canDamage == entity->damageGroup) {
+                    && entity->canDamage == target->damageGroup) {
                     if (target && CheckCollisionRecs(entity->rect, target->rect)) {
                         // this projectile has collided with player
                         efs_EntitySetProperty(target, efs_prop_TempInvincible);
