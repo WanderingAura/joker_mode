@@ -16,10 +16,12 @@ static void ProjectileTemplatesInit(efs_Entity template_table[ProjectileTypeCoun
     efs_EntitySetProperty(&template_table[ProjectileNormal], efs_prop_CanMove);
     efs_EntitySetProperty(&template_table[ProjectileNormal], efs_prop_HasLifetime);
     efs_EntitySetProperty(&template_table[ProjectileNormal], efs_prop_Collidable);
-    efs_EntitySetProperty(&template_table[ProjectileNormal], efs_prop_DamagesPlayer);
+    efs_EntitySetProperty(&template_table[ProjectileNormal], efs_prop_CanDamage);
     efs_EntitySetProperty(&template_table[ProjectileNormal], efs_prop_DespawnWhenFarFromPlayer);
     efs_EntitySetProperty(&template_table[ProjectileNormal], efs_prop_ScalesWithDifficulty);
     template_table[ProjectileNormal].lifetime = 5.0f;
+    template_table[ProjectileNormal].damage = 3;
+    template_table[ProjectileNormal].canDamage = PlayerGroup;
     template_table[ProjectileNormal].baseMoveSpeed = 350.0f;
     template_table[ProjectileNormal].despawnDistance = 300.0f;
     template_table[ProjectileNormal].texture = textures[TextureProjectile];
@@ -37,15 +39,21 @@ static void SpawnerTemplatesInit(efs_Entity template_table[SpawnerTypeCount], co
 {
     memset(template_table, 0, sizeof(template_table[0])*SpawnerTypeCount);
     efs_EntitySetProperty(&template_table[SpawnerNormal], efs_prop_Spawner);
+    efs_EntitySetProperty(&template_table[SpawnerNormal], efs_prop_HasHealth);
     template_table[SpawnerNormal].texture = textures[TextureProjectileSpawner];
+    template_table[SpawnerNormal].health = 5;
+    template_table[SpawnerNormal].damageGroup = EnemyGroup;
     template_table[SpawnerNormal].spawnTime = 0.5f;
     template_table[SpawnerNormal].timeSinceLastSpawn = 0.5f;
     template_table[SpawnerNormal].rect.width = 32;
     template_table[SpawnerNormal].rect.height = 32;
 
     efs_EntitySetProperty(&template_table[SpawnerTwoPoints], efs_prop_Spawner);
+    efs_EntitySetProperty(&template_table[SpawnerTwoPoints], efs_prop_HasHealth);
     efs_EntitySetProperty(&template_table[SpawnerTwoPoints], efs_prop_MovesBetweenTwoPoints);
     template_table[SpawnerTwoPoints].texture = textures[TextureProjectileSpawner];
+    template_table[SpawnerTwoPoints].health = 5;
+    template_table[SpawnerTwoPoints].damageGroup = EnemyGroup;
     template_table[SpawnerTwoPoints].spawnTime = 1.0f;
     template_table[SpawnerTwoPoints].timeSinceLastSpawn = 1.0f;
     template_table[SpawnerTwoPoints].rect.width = 32;

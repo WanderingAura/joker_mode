@@ -7,7 +7,7 @@ typedef enum ProjectileType
     ProjectileNormal,
     ProjectileCircle,
     ProjectileNormalSpeedsUp,
-
+    
     ProjectileTypeCount,
 } ProjectileType;
 

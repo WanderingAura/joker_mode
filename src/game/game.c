@@ -52,7 +52,9 @@ void InitEntities(soc_GameMemory* memory)
     efs_EntitySetProperty(&guy, efs_prop_CanMove);
     efs_EntitySetProperty(&guy, efs_prop_PlayerControlled);
     efs_EntitySetProperty(&guy, efs_prop_HasHealth);
+    efs_EntitySetProperty(&guy, efs_prop_ShootsAtMouse);
     guy.health = 10;
+    guy.damageGroup = PlayerGroup;
     guy.dir.x = 0.0f;
     guy.dir.y = 0.0f;
     guy.rect.x = (float)GetScreenWidth() / 2.0f;
@@ -60,6 +62,9 @@ void InitEntities(soc_GameMemory* memory)
     guy.rect.height = 64.0f;
     guy.rect.width = 64.0f;
     guy.baseMoveSpeed = 300.0f;
+    guy.childInfo.template = &memory->entityTemplates.projectile[ProjectileNormal];
+    guy.attackCoolDown = 0.0f;
+    guy.attackSpeed = 2.0f;
     guy.texture = memory->textures[TextureGuy];
     efs_PoolAdd(&memory->efs_entityPool, guy);
 
@@ -94,6 +99,10 @@ void DrawEntities(soc_GameMemory* memory)
     int index = memory->efs_entityPool.activeHead;
     while(index >= 0) {
         efs_Entity* entity = &memory->efs_entityPool.entities[index];
+        if(efs_EntityHasProperty(entity, efs_prop_HasHealth) && entity->health <= 0) {
+            index = entity->next;
+            continue;
+        }
         DrawTexturePro(entity->texture, (Rectangle){0.0f, 0.0f, entity->rect.width, entity->rect.height}, entity->rect, (Vector2){0.0f, 0.0f}, 0, WHITE);
         index = entity->next;
     }
@@ -168,6 +177,12 @@ void MainGameUpdate(soc_GameMemory* memory)
         while(index >= 0) {
             efs_Entity* entity = &memory->efs_entityPool.entities[index];
             int nextIndex = entity->next;
+
+            if(efs_EntityHasProperty(entity, efs_prop_HasHealth) && entity->health <= 0) {
+                index = nextIndex;
+                continue;
+            }
+
             if(efs_EntityHasProperty(entity, efs_prop_PlayerControlled)) {
                 entity->dir.x = 0.0f;
                 entity->dir.y = 0.0f;
@@ -221,18 +236,40 @@ void MainGameUpdate(soc_GameMemory* memory)
                     efs_PoolAdd(&memory->efs_entityPool, spawned);
                 }
             }
+            if(efs_EntityHasProperty(entity, efs_prop_ShootsAtMouse)) {
+                entity->attackCoolDown -= GetFrameTime();
+                if(entity->attackCoolDown <= 0 && IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+                    
+                    entity->attackCoolDown = entity->attackSpeed;
+                    efs_Entity bullet = {0};
+                    memcpy(&bullet, entity->childInfo.template, sizeof(efs_Entity));
+                    bullet.canDamage = EnemyGroup;
+                    bullet.dir = (Vector2){1, 0};
+                    bullet.pos = entity->pos;
+                    efs_PoolAdd(&memory->efs_entityPool, bullet);
+                }
+            }
 
             // update for damaging player
-            if (!efs_EntityHasProperty(player, efs_prop_TempInvincible)
-                && efs_EntityHasProperty(entity, efs_prop_DamagesPlayer))
-            {
-                if (player && CheckCollisionRecs(entity->rect, player->rect))
-                {
-                    // this projectile has collided with player
-                    efs_EntitySetProperty(player, efs_prop_TempInvincible);
-                    player->invincibleTimer = 1.0f;
-                    player->health -= 3;
+            int j = memory->efs_entityPool.activeHead;
+            while(j >= 0) {
+                efs_Entity* target = &memory->efs_entityPool.entities[j];
+                if(j == index) {
+                    j = target->next;
                 }
+                if (efs_EntityHasProperty(target, efs_prop_HasHealth)
+                    && !efs_EntityHasProperty(target, efs_prop_TempInvincible)
+                    && efs_EntityHasProperty(entity, efs_prop_CanDamage)                
+                    && entity->canDamage == entity->damageGroup) {
+                    if (target && CheckCollisionRecs(entity->rect, target->rect)) {
+                        // this projectile has collided with player
+                        efs_EntitySetProperty(target, efs_prop_TempInvincible);
+                        target->invincibleTimer = 3.0f;
+                        target->health -= entity->damage;
+
+                    }
+                }
+                j = target->next;
             }
 
             if (efs_EntityHasProperty(entity, efs_prop_TempInvincible))

@@ -4,8 +4,8 @@
 #include <string.h>
 #include <math.h>
 
-#define HISCORE_SERVER_HOST "sochiscore.duckdns.org"
-#define HISCORE_SERVER_PORT 49445
+#define HISCORE_SERVER_HOST "localhost"
+#define HISCORE_SERVER_PORT 49432
 #define HISCORE_SERVER_ENDPOINT "/v1/hiscores"
 
 static bool IsDigit(char c)

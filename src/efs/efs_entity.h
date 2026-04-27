@@ -17,15 +17,22 @@ typedef enum {
     efs_prop_HasLifetime,
     efs_prop_HasRotation,
     efs_prop_Collidable,
-    efs_prop_DamagesPlayer,
+    efs_prop_CanDamage,
     efs_prop_Spawner,
     efs_prop_MovesBetweenTwoPoints,
     efs_prop_TempInvincible,
     efs_prop_DespawnWhenFarFromPlayer,
     efs_prop_ScalesWithDifficulty,
+    efs_prop_ShootsAtMouse
 } efs_PropertyType;
 
 struct efs_Entity;
+
+typedef enum DamageGroup {
+    PlayerGroup,
+    EnemyGroup,
+    NeutralGroup,
+} DamageGroup;
 
 typedef struct {
     struct efs_Entity* template;
@@ -48,8 +55,13 @@ typedef struct efs_Entity {
     float baseRotationSpeed;
     float baseMoveSpeed;
     float invincibleTimer;
+    float attackSpeed;
+    float attackCoolDown;
     Vector2 offsetFromParent;
     int health;
+    DamageGroup damageGroup;
+    int damage;
+    DamageGroup canDamage;
     float despawnDistance;
     efs_Child childInfo; // contains template for entities
     Vector2 spawnedEntityDir;
