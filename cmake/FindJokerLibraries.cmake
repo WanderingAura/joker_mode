@@ -1,6 +1,11 @@
 include_guard(GLOBAL)
 
 set(BUILD_SHARED_LIBS ON CACHE BOOL "Build raylib as shared library" FORCE)
+if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+  if (DEFINED ENV{WAYLAND_DISPLAY})
+    set(GLFW_BUILD_WAYLAND ON CACHE BOOL "build raylib with wayland" FORCE)
+  endif()
+endif()
 
 set(RAYLIB_VERSION 5.5)
 include(FetchContent)

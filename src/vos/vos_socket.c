@@ -37,6 +37,7 @@ vos_NetError NetErrFromPlatformErr(int errCode)
     switch (errCode)
     {
         case EWOULDBLOCK:
+        case EINPROGRESS:
 #if EWOULDBLOCK != EAGAIN
         case EAGAIN:
 #endif

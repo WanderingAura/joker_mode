@@ -1,12 +1,16 @@
+#include <string.h>
+#include <math.h>
+#include "based_raylib.h"
 #include "based_basic.h"
 #include "http.h"
 #include "core_game_memory.h"
-#include <string.h>
-#include <math.h>
+#include "raylib.h"
 
-#define HISCORE_SERVER_HOST "localhost"
-#define HISCORE_SERVER_PORT 49432
-#define HISCORE_SERVER_ENDPOINT "/v1/hiscores"
+#define HISCORE_SERVER_HOST "sochiscore.duckdns.org"
+#define HISCORE_SERVER_PORT 49944
+#define HISCORE_SERVER_ENDPOINT "/hiscores"
+
+#define BG_COLOR BLACK
 
 static bool IsDigit(char c)
 {
@@ -44,6 +48,8 @@ s32 ParseScoresLine(ScoreInfo* info, char* buf, u32 len)
 
 void GameoverLoadScores(GameoverData* data)
 {
+    Scoreboard* scoreboard = &data->scoreboard;
+
     data->gotScores = false;
     http_Connection* conn = {0}; // fix this mem leak
     http_Error err = http_ConnectionCreate(&conn);
@@ -64,7 +70,8 @@ void GameoverLoadScores(GameoverData* data)
     }
     else if (resp.status != 200)
     {
-        BSD_ERR("HTTP response returned non-success status code: %d", resp.status);
+        BSD_ERR("HTTP response returned non-success status code: %d, body: %.*s", resp.status, resp.content.len, resp.content.str);
+        http_ResponseFree(&resp);
     }
     else
     {
@@ -88,7 +95,7 @@ void GameoverLoadScores(GameoverData* data)
 
             u32 lineLen = nextLine - curPos;
 
-            ParseScoresLine(&data->topScores[scoreIndex], curPos, lineLen);
+            ParseScoresLine(&scoreboard->topScores[scoreIndex], curPos, lineLen);
 
             scoreIndex++;
             curPos = nextLine;
@@ -106,7 +113,7 @@ void GameoverLoadScores(GameoverData* data)
     // NOTE: the hostname/url fields will be the same so we use the same struct
     // TODO: just use a freaking arena
     req.body.str = MemAlloc(256);
-    int len = snprintf(req.body.str, 256, "%s,%d\r\n", data->userScore.username, data->userScore.score);
+    int len = snprintf(req.body.str, 256, "%s,%d\r\n", scoreboard->userScore.username, scoreboard->userScore.score);
     req.body.len = len;
     req.method = http_MethodPOST;
 
@@ -137,6 +144,54 @@ void GameoverLoadScores(GameoverData* data)
     }
 }
 
+void DrawScoreBoard(const Scoreboard* scoreboard, Vector2 topleft)
+{
+    DrawRectangle(topleft.x, topleft.y, 400, 400, BROWN);
+    const int startX = topleft.x + 20;
+    int startY = topleft.y + 20;
+    const int rowHeight = 32;
+
+    DrawText("Scores:", startX, startY, 40, RED);
+
+    startY += 45;
+    const int nameX = startX;
+    const int scoreX = startX + 300;
+    bool drawnUserScore = false;
+    for (u32 i = 0; i < ArrayCount(scoreboard->topScores); i++)
+    {
+        int y = startY + i * rowHeight;
+
+        if (!drawnUserScore && scoreboard->userScore.score > scoreboard->topScores[i].score)
+        {
+            DrawText(scoreboard->userScore.username, nameX, y, 24, ORANGE);
+            DrawText(TextFormat("%u", scoreboard->userScore.score), scoreX, y, 24, YELLOW);
+            drawnUserScore = true;
+            continue;
+        }
+
+        int topScoresIdx = i;
+        if (drawnUserScore)
+        {
+            topScoresIdx--;
+        }
+        if (scoreboard->topScores[topScoresIdx].username[0] != 0)
+        {
+            // username
+            DrawText(scoreboard->topScores[topScoresIdx].username, nameX, y, 24, SKYBLUE);
+
+            // score
+            DrawText(TextFormat("%u", scoreboard->topScores[topScoresIdx].score), scoreX, y, 24, YELLOW);
+        }
+    }
+
+    if (!drawnUserScore)
+    {
+        const int userScoreY = startY + ArrayCount(scoreboard->topScores) * rowHeight;
+        DrawText(scoreboard->userScore.username, nameX, userScoreY, 24, ORANGE);
+        DrawText(TextFormat("%u", scoreboard->userScore.score), scoreX, userScoreY, 24, YELLOW);
+    }
+}
+
 void GameoverShowScores(GameoverData* data)
 {
     int key = GetKeyPressed();
@@ -144,54 +199,22 @@ void GameoverShowScores(GameoverData* data)
     {
         core_GameMemoryGet()->menuState = MenuState_Title;
     }
+    float periodic = GetPeriodicTime(0.3f, 1.0f, 1.2f);   
+
+    Color playAgainColor = Fade(SKYBLUE, periodic);
+
     BeginDrawing();
-        ClearBackground(BLUE);
-        const int startX = 100;
-        const int startY = 120;
-        const int rowHeight = 32;
+        ClearBackground(BG_COLOR);
 
-        const int nameX = startX;
-        const int scoreX = startX + 300;
+        DrawScoreBoard(&data->scoreboard, (Vector2){200, 80});
 
-        DrawText("Game Over!", startX, 60, 40, RAYWHITE);
-
-        bool drawnUserScore = false;
-        for (u32 i = 0; i < ArrayCount(data->topScores); i++)
-        {
-            int y = startY + i * rowHeight;
-
-            if (!drawnUserScore && data->userScore.score > data->topScores[i].score)
-            {
-                DrawText(data->userScore.username, nameX, y, 24, ORANGE);
-                DrawText(TextFormat("%u", data->userScore.score), scoreX, y, 24, YELLOW);
-                drawnUserScore = true;
-                continue;
-            }
-
-            int topScoresIdx = i;
-            if (drawnUserScore)
-            {
-                topScoresIdx--;
-            }
-            // username
-            DrawText(data->topScores[topScoresIdx].username, nameX, y, 24, WHITE);
-
-            // score
-            DrawText(TextFormat("%u", data->topScores[topScoresIdx].score), scoreX, y, 24, YELLOW);
-        }
-
-        if (!drawnUserScore)
-        {
-            const int userScoreY = startY + ArrayCount(data->topScores) * rowHeight;
-            DrawText(data->userScore.username, nameX, userScoreY, 24, ORANGE);
-            DrawText(TextFormat("%u", data->userScore.score), scoreX, userScoreY, 24, YELLOW);
-        }
-
+        DrawText("Press any button to play again!", 220, 520, 20, playAgainColor);
     EndDrawing();
 }
 
 void GameoverScreenNoScores(GameoverData* data)
 {
+    Scoreboard* scoreboard = &data->scoreboard;
     int key = GetKeyPressed();
     if (key != 0)
     {
@@ -200,10 +223,10 @@ void GameoverScreenNoScores(GameoverData* data)
     static int alphaCount = 0;
     float alpha = ( (sinf((float)alphaCount / 10.0f) + 1.0f )* 0.5f );
     BeginDrawing();
-        ClearBackground(BLUE);
+        ClearBackground(BG_COLOR);
         DrawText("GAME OVER", 200, 200, 60, DARKBLUE);
         DrawText("Failed to connect to hiscores server...", 200, 100, 20, DARKBLUE);
-        DrawText(TextFormat("Score: %d", data->userScore.score), 200, 300, 40, GREEN);
+        DrawText(TextFormat("Score: %d", scoreboard->userScore.score), 200, 300, 40, GREEN);
         DrawText("PRESS ANY KEY TO RETURN TO TITLE SCREEN", 120, 500, 20, Fade(DARKBLUE, alpha));
     EndDrawing();
     alphaCount++;
@@ -212,11 +235,12 @@ void GameoverScreenNoScores(GameoverData* data)
 #define MAX_INPUT_CHARS 10
 void GameoverInputScore(GameoverData* data)
 {
+    Scoreboard* scoreboard = &data->scoreboard;
     static int framesCounter = 0;
     int key = GetCharPressed();
-    char* name = data->userScore.username;
+    char* name = scoreboard->userScore.username;
     int screenWidth = GetScreenWidth();
-    Rectangle textBox = { screenWidth/2.0f - 100, 180, 225, 50 };
+    Rectangle textBox = { screenWidth/2.0f - 100, 380, 225, 50 };
 
     while (key > 0)
     {
@@ -238,14 +262,18 @@ void GameoverInputScore(GameoverData* data)
     if (IsKeyPressed(KEY_ENTER))
     {
         // username should already be in the userScore struct
-        data->userScore.score = (int)(core_GameMemoryGet()->levelTimer * 100.0f);
+        scoreboard->userScore.score = (int)(core_GameMemoryGet()->levelTimer * 100.0f);
         data->state = GameoverState_LoadingScore;
     }
 
+    float periodic = GetPeriodicTime(0.6f, 1.0f, 1.2f);   
+
+    Color gameOverColor = ColorTint(RED, Fade(bsd_BRIGHT_RED, periodic));
+
     BeginDrawing();
-        ClearBackground(BLUE);
-        DrawText("Game Over!", 100, 60, 40, RAYWHITE);
-        DrawText("Enter your username to record your score!", 200, 150, 20, RAYWHITE);
+        ClearBackground(BG_COLOR);
+        DrawText("Game Over!", 250, 150, 60, gameOverColor);
+        DrawText("Enter your username to record your score!", 200, 320, 20, RAYWHITE);
         DrawRectangleRec(textBox, LIGHTGRAY);
         DrawRectangleLines((int)textBox.x, (int)textBox.y, (int)textBox.width, (int)textBox.height, RED);
         DrawText(name, (int)textBox.x + 5, (int)textBox.y + 8, 40, MAROON);

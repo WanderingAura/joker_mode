@@ -132,7 +132,7 @@ int http_ReqAndWaitForResp(http_Connection* conn, const http_Request* req, http_
 
     if (req->body.str)
     {
-        int writtenBytes = sprintf(headers+headerLen, "Content-Length: %d\r\n", req->body.len);
+        sprintf(headers+headerLen, "Content-Length: %d\r\n", req->body.len);
     }
 
     int reqLen = snprintf(
@@ -397,7 +397,6 @@ int http_RecvAndParse(http_Connection* conn, http_Response* resp)
 
 
     http_ParseState state = ParsingStatusLine;
-    s64 bodyLen = -1;
     http_Error ret = http_Success;
 
     sh_new_arena(resp->headers);
@@ -489,7 +488,6 @@ int http_RecvAndParse(http_Connection* conn, http_Response* resp)
     }
 
     DBG_ASSERT_MSG(resp->status >= 100 && resp->status <= 511, "Invalid status code");
-done:
     return 0;
 
 error:

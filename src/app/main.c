@@ -84,6 +84,8 @@ int main(void)
         return 1;
     }
 
+    SetConfigFlags(FLAG_WINDOW_HIGHDPI);
+
     InitWindow(screenWidth, screenHeight, "Joker Mode");
     SetTargetFPS(60);
 

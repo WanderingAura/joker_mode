@@ -13,7 +13,7 @@
 #include "core_entity_template.h"
 #include "efs_entity.h"
 #include "gameover.h"
-#include "vos_socket.h"
+#include "render_font.h"
 
 #if defined(__linux__)
   #define SOC_EXPORT
@@ -65,7 +65,7 @@ void InitEntities(soc_GameMemory* memory)
     guy.childInfo.template = &memory->entityTemplates.projectile[ProjectileNormal];
     guy.attackCoolDown = 0.0f;
     guy.attackSpeed = 2.0f;
-    guy.texture = memory->textures[TextureGuy];
+    guy.texture = memory->textures[TextureVGolfer];
     efs_PoolAdd(&memory->efs_entityPool, guy);
 
     // // store a pointer to the player so that it's easily accessed
@@ -133,7 +133,8 @@ SOC_EXPORT void soc_GameMemoryInit(soc_GameMemory* memory)
     bsd_SetLogLevel(bsd_LogLevel_Debug);
 
     memset(memory, 0, sizeof(soc_GameMemory));
-    core_TexturesInit(memory);
+    core_TexturesInit(memory->textures);
+    rnd_FontInit(memory->fonts);
     memory->camera = (Camera2D){0};
     memory->gameoverData.usernameLen = 0;
 
@@ -323,25 +324,27 @@ void MainGameUpdate(soc_GameMemory* memory)
 
 void TitleScreenUpdate(soc_GameMemory* memory)
 {
-    int screenWidth = (float)GetScreenWidth();
-    int screenHeight = (float)GetScreenHeight();
-
     int key = GetKeyPressed();
     if (key != 0)
     {
         memory->menuState = MenuState_MainGame;
         InitDemoLevel(memory);
     }
+
+    Font* fonts = memory->fonts;
     static int alphaCount = 0;
     float alpha = ( (sinf((float)alphaCount / 10.0f) + 1.0f )* 0.5f );
     BeginDrawing();
-        DrawRectangle(0, 0, screenWidth, screenHeight, GREEN);
-        DrawText("JOKER MODE", 250, 200, 40, DARKGREEN);
-        DrawText("PRESS ANY KEY TO START", 250, 500, 20, Fade(DARKGREEN, alpha));
+        ClearBackground(BLACK);
+        DrawTextEx(
+            fonts[FontTypeTitle],
+            "The Vigilantes",
+            (Vector2){200, 200},
+            40, 4, DARKBLUE);
+        DrawText("PRESS ANY KEY TO START", 250, 500, 20, Fade(DARKBLUE, alpha));
     EndDrawing();
     alphaCount++;
 }
-
 
 SOC_EXPORT void soc_GameUpdate(soc_GameMemory* memory)
 {
