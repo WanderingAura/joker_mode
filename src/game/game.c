@@ -19,6 +19,7 @@
 #include "lvl_collision.h"
 #include "core_wall.h"
 
+
 #if defined(__linux__)
   #define SOC_EXPORT
 #elif defined(_WIN32)
@@ -156,51 +157,6 @@ SOC_EXPORT void soc_GameMemoryInit(soc_GameMemory* memory)
     BSD_INF("Game memory initialised!");
 }
 
-void MoveAndResolveCollisions(efs_Entity* player, efs_EntityPool* pool)
-{
-    float stepAmount = player->baseMoveSpeed * GetFrameTime();
-    Vector2 entityStep = Vector2Scale(player->dir, stepAmount);
-
-    player->pos.x += entityStep.x;
-
-    int entityIdx = pool->activeHead;
-    while(entityIdx >= 0) {
-        efs_Entity* wall = &pool->entities[entityIdx];
-        if (efs_EntityHasProperty(wall, efs_prop_Solid))
-        {
-            if (CheckCollisionRecs(wall->rect, player->rect))
-            {
-                player->pos.x += lvl_CollisionAdjust(player->pos.x, player->rect.width, wall->pos.x, wall->rect.width);
-            }
-        }
-        entityIdx = wall->next;
-    }
-    player->pos.y += entityStep.y;
-    while(entityIdx >= 0) {
-        efs_Entity* wall = &pool->entities[entityIdx];
-        if (efs_EntityHasProperty(wall, efs_prop_Solid))
-        {
-            if (CheckCollisionRecs(wall->rect, player->rect))
-            {
-                player->pos.y += lvl_CollisionAdjust(player->pos.y, player->rect.height, wall->pos.y, wall->rect.height);
-            }
-        }
-        entityIdx = wall->next;
-    }
-}
-
-void EntityMove(efs_Entity* entity, float modifier)
-{
-    float stepAmount = entity->baseMoveSpeed * GetFrameTime();
-    if (efs_EntityHasProperty(entity, efs_prop_ScalesWithDifficulty))
-    {
-        stepAmount *= 1 + modifier;
-    }
-    Vector2 entityStep = Vector2Scale(entity->dir, stepAmount);
-    entity->pos.x += entityStep.x;
-    entity->pos.y += entityStep.y;
-}
-
 bool RectCollidesWall(Rectangle rect, efs_EntityPool* entityPool, Vector2* collideDir)
 {
     collideDir->x = 0;
@@ -251,123 +207,21 @@ void MainGameUpdate(soc_GameMemory* memory)
         while(index >= 0) {
             efs_Entity* entity = &memory->efs_entityPool.entities[index];
             int nextIndex = entity->next;
-
+            //using loop control so not in a function
             if(efs_EntityHasProperty(entity, efs_prop_HasHealth) && entity->health <= 0) {
                 index = nextIndex;
                 continue;
             }
-
-            if(efs_EntityHasProperty(entity, efs_prop_PlayerControlled)) {
-                entity->dir.x = 0.0f;
-                entity->dir.y = 0.0f;
-                if(IsKeyDown(KEY_W)) {
-                    entity->dir.y -= 1.0f;
-                };
-                if(IsKeyDown(KEY_S)) {
-                    entity->dir.y += 1.0f;
-                }
-                if(IsKeyDown(KEY_A)) {
-                    entity->dir.x -= 1.0f;
-                }
-                if(IsKeyDown(KEY_D)) {
-                    entity->dir.x += 1.0f;
-                }
-                entity->dir = Vector2Normalize(entity->dir);
-                memory->camera.target = entity->pos;
-
-                MoveAndResolveCollisions(entity, &memory->efs_entityPool);
-            }
-            if (efs_EntityHasProperty(entity, efs_prop_HasRotation))
-            {
-                entity->dir = Vector2Rotate(entity->dir, entity->baseRotationSpeed * GetFrameTime());
-            }
-            // if not a player we update it normally
-            if(efs_EntityHasProperty(entity, efs_prop_CanMove) && !efs_EntityHasProperty(entity, efs_prop_PlayerControlled)) {
-                EntityMove(entity, memory->levelTimer/20.0f);
-            }
-            if (efs_EntityHasProperty(entity, efs_prop_Solid) && player)
-            {
-                if (CheckCollisionRecs(entity->rect, player->rect))
-                {
-                    player->pos.x += lvl_CollisionAdjust(player->pos.x, player->rect.width, entity->pos.x, entity->rect.width);
-                    player->pos.y += lvl_CollisionAdjust(player->pos.y, player->rect.height, entity->pos.y, entity->rect.height);
-                }
-            }
-            if (efs_EntityHasProperty(entity, efs_prop_HasLifetime))
-            {
-                entity->lifetime -= GetFrameTime();
-                if (entity->lifetime < 0)
-                {
-                    efs_PoolDelete(&memory->efs_entityPool, index);
-                }
-            }
-            if (efs_EntityHasProperty(entity, efs_prop_Spawner))
-            {
-                entity->timeSinceLastSpawn += GetFrameTime();
-                if (entity->timeSinceLastSpawn >= entity->spawnTime)
-                {
-                    entity->timeSinceLastSpawn = 0;
-                    efs_Entity spawned = {0};
-                    memcpy(&spawned, entity->childInfo.template, sizeof(efs_Entity));
-                    spawned.dir = entity->childInfo.initialDir;
-                    spawned.pos = Vector2Add(entity->pos, entity->childInfo.offset);
-                    efs_PoolAdd(&memory->efs_entityPool, spawned);
-                }
-            }
-            if(efs_EntityHasProperty(entity, efs_prop_ShootsAtMouse)) {
-                entity->attackCoolDown -= GetFrameTime();
-                if(entity->attackCoolDown <= 0 && IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-                    
-                    entity->attackCoolDown = entity->attackSpeed;
-                    efs_Entity bullet = {0};
-                    memcpy(&bullet, entity->childInfo.template, sizeof(efs_Entity));
-                    bullet.canDamage = EnemyGroup;
-                    bullet.dir = (Vector2){1, 0};
-                    bullet.pos = entity->pos;
-                    efs_PoolAdd(&memory->efs_entityPool, bullet);
-                }
-            }
-
-            // update for damaging player
-            int j = memory->efs_entityPool.activeHead;
-            while(j >= 0) {
-                efs_Entity* target = &memory->efs_entityPool.entities[j];
-                if(j == index) {
-                    j = target->next;
-                }
-                if (efs_EntityHasProperty(target, efs_prop_HasHealth)
-                    && !efs_EntityHasProperty(target, efs_prop_TempInvincible)
-                    && efs_EntityHasProperty(entity, efs_prop_CanDamage)                
-                    && entity->canDamage == target->damageGroup) {
-                    if (target && CheckCollisionRecs(entity->rect, target->rect)) {
-                        // this projectile has collided with player
-                        efs_EntitySetProperty(target, efs_prop_TempInvincible);
-                        target->invincibleTimer = 3.0f;
-                        target->health -= entity->damage;
-
-                    }
-                }
-                j = target->next;
-            }
-
-            if (efs_EntityHasProperty(entity, efs_prop_TempInvincible))
-            {
-                entity->invincibleTimer -= GetFrameTime();
-                if (entity->invincibleTimer < 0)
-                {
-                    efs_EntityUnsetProperty(entity, efs_prop_TempInvincible);
-                }
-            }
-
-            if (efs_EntityHasProperty(entity, efs_prop_DespawnWhenFarFromPlayer))
-            {
-                DBG_ASSERT_MSG(entity->despawnDistance > 0, "Got %f despawn distance. Entity with this property should have >0 despawn distance");
-                float distanceToPlayer = Vector2Distance(entity->pos, player->pos);
-                if (distanceToPlayer > entity->despawnDistance)
-                {
-                    efs_PoolDelete(&memory->efs_entityPool, index);
-                }
-            }
+            handle_playerControlled(entity, memory);
+            handle_hasRotation(entity);
+            handle_canMove(entity, memory);
+            handle_solid(entity, player);
+            handle_lifetime(entity, memory, index);
+            handle_spawner(entity, memory);
+            handle_shootAtMouse(entity, memory);
+            handle_canDamage(entity, memory, index);
+            handle_tempInvincible(entity);
+            handle_despawnWhenFarFromPlayer(entity, memory, player, index);
             index = nextIndex;
         }
     }
