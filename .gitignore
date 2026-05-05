@@ -13,5 +13,6 @@ compile_commands.json
 *.so
 *.dll
 .clangd
+.env
 *.log
 *.ilk

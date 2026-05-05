@@ -12,6 +12,13 @@
 
 #define BG_COLOR BLACK
 
+typedef struct
+{
+    const char* hiscoreHost;
+    const char* endpoint;
+    u16 port;
+} HiscoreServerData;
+
 static bool IsDigit(char c)
 {
     return c >= '0' && c <= '9';
@@ -45,10 +52,38 @@ s32 ParseScoresLine(ScoreInfo* info, char* buf, u32 len)
     return 0;
 }
 
+static HiscoreServerData GetServerData()
+{
+    char* host = getenv("SOCHISCORE_HOST");
+    if (!host)
+    {
+        host = "localhost";
+    }
+
+    char* endpoint = getenv("SOCHISCORE_ENDPOINT");
+    if (!endpoint)
+    {
+        endpoint = HISCORE_SERVER_ENDPOINT;
+    }
+
+    char* portStr = getenv("SOCHISCORE_PORT");
+    if (!portStr)
+    {
+        portStr = "49944";
+    }
+
+    s32 port = atoi(portStr);
+
+    DBG_ASSERT_MSG(port <= 65535, "SOCHISCORE_PORT is out of bounds: %d", port);
+
+    return (HiscoreServerData) {host, endpoint, port};
+}
 
 void GameoverLoadScores(GameoverData* data)
 {
     Scoreboard* scoreboard = &data->scoreboard;
+
+    HiscoreServerData serverData = GetServerData();
 
     data->gotScores = false;
     http_Connection* conn = {0}; // fix this mem leak
@@ -57,11 +92,11 @@ void GameoverLoadScores(GameoverData* data)
     http_Request req = {0};
     req.method = http_MethodGET;
     req.body.str = NULL;
-    req.port = HISCORE_SERVER_PORT;
+    req.port = serverData.port;
     // we're using snprintf here to stop MSVC from complaining about strcpy/strncpy deprecation.
     // kinda makes sense because strncpy doesn't do what i originally thought it did (it always copies n chars)
-    snprintf(req.hostName, ArrayCount(req.hostName), HISCORE_SERVER_HOST);
-    snprintf(req.hostURL, ArrayCount(req.hostURL), HISCORE_SERVER_ENDPOINT);
+    snprintf(req.hostName, ArrayCount(req.hostName), "%s", serverData.hiscoreHost);
+    snprintf(req.hostURL, ArrayCount(req.hostURL), "%s", serverData.endpoint);
     http_Response resp = {0};
     err = http_ReqAndWaitForResp(conn, &req, &resp);
     if (err)
