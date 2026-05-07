@@ -19,6 +19,8 @@ set "UNITY_FILE=%UNITY_NAME%.c"
 set "DLL_NAME=soc.dll"
 set "EXE_NAME=society.exe"
 
+set "COMPILE_FLAGS=/I"../build/debug/_deps/raylib-build/raylib/include" /LD /Zi /std:c11 /Fd"../" /W4 /we4716 /we4715 /wd4244 /wd4456"
+
 del %UNITY_NAME%.c
 
 echo ====================================
@@ -68,12 +70,7 @@ echo Compiling %DLL_NAME% unity build...
 echo ====================================
 
 cl.exe !INCLUDES! ^
-    /I"../build/debug/_deps/raylib-build/raylib/include" ^
-    /LD ^
-    /Zi ^
-    /std:c11 ^
-    /Fd"../" ^
-    /W4 /we4716 /we4715 /wd4244 /wd4456 ^
+    %COMPILE_FLAGS% ^
     %UNITY_FILE% ^
     /link "../build/debug/_deps/raylib-build/raylib/raylib.lib" ^
     /OUT:"../%DLL_NAME%"
@@ -122,11 +119,7 @@ if "%1" == "all" (
   echo Compiling %EXE_NAME% unity build...
   echo ====================================
   cl.exe !INCLUDES! ^
-      /I"../build/debug/_deps/raylib-build/raylib/include" ^
-      /Zi ^
-      /std:c11 ^
-      /Fd"../" ^
-      /W4 /we4716 /we4715 /wd4244 /wd4456 ^
+      %COMPILE_FLAGS% ^
       %UNITY_FILE% ^
       /link "../build/debug/_deps/raylib-build/raylib/raylib.lib" ^
       /OUT:"../%EXE_NAME%"
