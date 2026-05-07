@@ -9,7 +9,7 @@ target_sources(soc PRIVATE
     gameover.c
 )
 
-target_link_libraries(soc PRIVATE based efs gameplay game_api level render soc_http vos)
+target_link_libraries(soc PRIVATE based efs gameplay game_api level render behaviours soc_http vos)
 
 add_library(game_api INTERFACE)
 

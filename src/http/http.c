@@ -128,11 +128,11 @@ int http_ReqAndWaitForResp(http_Connection* conn, const http_Request* req, http_
     // TODO: fill this in with any relevant headers
     char headers[HTTP_MAX_REQ_SIZE] = "Connection: close\r\n";
 
-    int headerLen = strlen(headers);
+    size_t headerLen = strlen(headers);
 
     if (req->body.str)
     {
-        sprintf(headers+headerLen, "Content-Length: %d\r\n", req->body.len);
+        snprintf(headers+headerLen, HTTP_MAX_REQ_SIZE - headerLen, "Content-Length: %d\r\n", req->body.len);
     }
 
     int reqLen = snprintf(
@@ -189,7 +189,7 @@ int http_ReqAndWaitForResp(http_Connection* conn, const http_Request* req, http_
             return -1;
         }
 
-        if (bytesSent != req->body.len)
+        if ((u32)bytesSent != req->body.len)
         {
             BSD_ERR("Failed to send entire request body, got %d, expected %d", bytesSent, req->body.len);
             return -1;
@@ -297,7 +297,7 @@ http_Error GetLine(http_String* line, http_Connection* conn)
 
                 // move the remaining bytes to the start
                 // memcpy assumes non-aliasing pointers so we will do this by hand
-                for (int i = 0; i < remainingBytes; i++)
+                for (u32 i = 0; i < remainingBytes; i++)
                 {
                     buf->data[i] = buf->data[buf->pos+i];
                 }

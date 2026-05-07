@@ -55,15 +55,23 @@ for /d %%d in ("%SRC_DIR%\*") do (
 
 echo Done
 
-echo Compiling unity build...
+echo Compiling soc.dll unity build...
 
 cl.exe !INCLUDES! ^
     /I"../build/debug/_deps/raylib-build/raylib/include" ^
     /LD ^
-    /std:c11 /permissive- ^
+    /Zi ^
+    /std:c11 ^
+    /Fd"../" ^
+    /W4 /we4716 /we4715 /wd4244 /wd4456 ^
     %UNITY_FILE% ^
     /link "../build/debug/_deps/raylib-build/raylib/raylib.lib" ^
     /OUT:"../soc.dll"
+
+if %ERRORLEVEL% neq 0 (
+    echo Build failed with error code %ERRORLEVEL%. Please check the logs above.
+    exit /b %ERRORLEVEL%
+)
 
 del /Q soc_dll_unity_windows.exp 2>nul
 del /Q soc_dll_unity_windows.lib 2>nul

@@ -77,7 +77,7 @@ s64 vos_DLLUnload(vos_DLLHandle handle)
 vos_DLLFuncPtr vos_DLLGetFunc(vos_DLLHandle handle, const char* funcName)
 {
   char errMsg[WINDOWS_ERROR_MESSAGE_LEN_MAX] = {0};
-  vos_DLLFuncPtr ptr = GetProcAddress(handle, funcName);
+  vos_DLLFuncPtr ptr = (vos_DLLFuncPtr)GetProcAddress(handle, funcName);
 
   if (!ptr)
   {

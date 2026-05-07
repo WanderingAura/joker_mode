@@ -18,6 +18,7 @@
 #include "render_font.h"
 #include "lvl_collision.h"
 #include "core_wall.h"
+#include "prop_behaviours.h"
 
 
 #if defined(__linux__)

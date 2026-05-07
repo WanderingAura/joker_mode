@@ -76,17 +76,17 @@ bool efs_EntityHasProperty(efs_Entity const* entity, efs_PropertyType prop)
     assert(entity != NULL);
     u64 propLoc = entity->props[prop/NUM_PROPS_IN_U64];
 
-    return propLoc & (1 << (prop % NUM_PROPS_IN_U64));
+    return propLoc & (1ULL << (prop % NUM_PROPS_IN_U64));
 }
 
 void efs_EntitySetProperty(efs_Entity *entity, efs_PropertyType prop) {
     assert(entity != NULL);
-    entity->props[prop/NUM_PROPS_IN_U64] |= (1 << (prop % NUM_PROPS_IN_U64));
+    entity->props[prop/NUM_PROPS_IN_U64] |= (1ULL << (prop % NUM_PROPS_IN_U64));
 }
 
 void efs_EntityUnsetProperty(efs_Entity *entity, efs_PropertyType prop) {
     assert(entity != NULL);
-    entity->props[prop/NUM_PROPS_IN_U64] &= ~(1 << (prop % NUM_PROPS_IN_U64));
+    entity->props[prop/NUM_PROPS_IN_U64] &= ~(1ULL << (prop % NUM_PROPS_IN_U64));
 }
 
 void efs_EntitySetProperties(efs_Entity* entity, efs_PropertyType* props, u32 numProps)
@@ -94,7 +94,7 @@ void efs_EntitySetProperties(efs_Entity* entity, efs_PropertyType* props, u32 nu
     assert(entity != NULL);
     assert(numProps <= PROPERTY_MAX_NUM);
 
-    for (int i = 0; i < numProps; i++)
+    for (u32 i = 0; i < numProps; i++)
     {
         efs_EntitySetProperty(entity, props[i]);
     }
