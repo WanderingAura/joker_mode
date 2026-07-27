@@ -5,6 +5,7 @@
 #include "http.h"
 #include "core_game_memory.h"
 #include "raylib.h"
+#include "based_core.h"
 
 #define HISCORE_SERVER_HOST "sochiscore.duckdns.org"
 #define HISCORE_SERVER_PORT 49944

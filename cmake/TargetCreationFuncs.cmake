@@ -1,6 +1,6 @@
 include_guard(DIRECTORY)
 
-set_property(DIRECTORY PROPERTY JOKER_COMPILER_FLAGS "-Wall;-Wextra;-Werror")
+set_property(DIRECTORY PROPERTY JOKER_COMPILER_FLAGS "-Wall;-Wextra;-Werror;-Wno-error=unused-function;-Wno-error=unused-variable;-Wno-error=override-init")
 set_property(DIRECTORY PROPERTY JOKER_MSVC_COMPILER_FLAGS "/W4;/we4716;/we4715;/wd4244;/permissive-")
 
 function( _joker_set_options target )

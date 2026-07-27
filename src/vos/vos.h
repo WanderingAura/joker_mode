@@ -4,6 +4,14 @@
 typedef void* vos_DLLFuncPtr;
 typedef void* vos_DLLHandle;
 
+typedef struct
+{
+    u64 logical_processor_count;
+    u64 page_size;
+    u64 large_page_size;
+    u64 allocation_granularity;
+} vos_SystemInfo;
+
 #if defined(_WIN32)
   #define vos_DLL_EXTENSION "dll"
   #define vos_DLL_PREFIX ""
@@ -26,3 +34,13 @@ s64 vos_DLLUnload(vos_DLLHandle handle);
 vos_DLLFuncPtr vos_DLLGetFunc(vos_DLLHandle handle, const char* funcName);
 
 void GetTmpDLLName(char* dest, const char* file);
+
+vos_SystemInfo* vos_GetSystemInfo();
+
+void* vos_ReserveMemoryLarge(u64 size);
+void* vos_ReserveMemory(u64 size);
+
+b32 vos_CommitMemory(void* ptr, u64 size);
+b32 vos_CommitMemoryLarge(void* ptr, u64 size);
+
+void vos_ReleaseMemory(void* ptr, u64 size);

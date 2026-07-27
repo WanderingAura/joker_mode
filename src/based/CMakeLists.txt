@@ -10,4 +10,8 @@ joker_add_lib(based STATIC
 joker_target_link_raylib(based)
 target_compile_options(based PRIVATE -fPIC)
 
-target_include_directories(based PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(based
+    PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/..
+)

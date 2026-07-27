@@ -1,4 +1,6 @@
+#include <stdbool.h>
 #include "based_basic.h"
+#include "based_core.h"
 #ifndef __linux__
   #error This file should only be compiled on linux
 #endif
@@ -13,6 +15,8 @@
 #include <unistd.h>
 #include <error.h>
 #include <sys/socket.h>
+#include <sys/sysinfo.h>
+#include <sys/mman.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <fcntl.h>
@@ -76,3 +80,56 @@ vos_DLLFuncPtr vos_DLLGetFunc(vos_DLLHandle handle, const char* funcName)
     }
     return ptr;
 }
+
+vos_SystemInfo* vos_GetSystemInfo()
+{
+    static vos_SystemInfo* infoptr;
+    static vos_SystemInfo info;
+    if (infoptr == NULL)
+    {
+        infoptr = &info;
+        infoptr->logical_processor_count = get_nprocs();
+        infoptr->page_size = getpagesize();
+        infoptr->large_page_size = MB(2);
+        infoptr->allocation_granularity = infoptr->page_size;
+    }
+    return infoptr;
+}
+
+void* vos_ReserveMemoryLarge(u64 size)
+{
+    void* mem = mmap(NULL, size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB, -1, 0);
+    if (mem == MAP_FAILED)
+    {
+        mem = 0;
+    }
+    return mem;
+}
+
+void* vos_ReserveMemory(u64 size)
+{
+    void* mem = mmap(NULL, size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (mem == MAP_FAILED)
+    {
+        mem = 0;
+    }
+    return mem;
+}
+
+b32 vos_CommitMemory(void* ptr, u64 size)
+{
+    mprotect(ptr, size, PROT_READ | PROT_WRITE);
+    return true;
+}
+
+b32 vos_CommitMemoryLarge(void* ptr, u64 size)
+{
+    mprotect(ptr, size, PROT_READ | PROT_WRITE);
+    return true;
+}
+
+void vos_ReleaseMemory(void *ptr, u64 size)
+{
+    munmap(ptr, size);
+}
+

@@ -24,7 +24,6 @@ typedef s32 b32;
 typedef s64 b64;
 
 /* ==== BASIC MACROS ==== */
-#define ArrayCount(arr) (sizeof(arr)/(sizeof(*(arr))))
 #define STRINGIFY(s) #s
 
 #if defined(__GNUC__)

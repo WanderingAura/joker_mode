@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "based_basic.h"
+#include "based_core.h"
 
 
 int efs_PoolAdd(efs_EntityPool* entityPool, efs_Entity entity) {
