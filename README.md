@@ -11,6 +11,14 @@ Gameplay very much WIP.
 ~~Note that the hiscore server is down because I bricked my raspberry pi which was running it. Working on getting it back online.~~
 The hiscore server is now running on an ESP32 which I hope is more robust. If you have a ESP32 yourself there are instructions for how to set up the server below.
 
+By default the game tries to look for the hiscore server on localhost. You can point it to the actual hiscore server by setting the following env variables:
+
+```bash
+export SOCHISCORE_HOST="sochiscore.duckdns.org"
+export SOCHISCORE_PORT=49944
+export SOCHISCORE_ENDPOINT="/hiscores"
+```
+
 # TODO
 see TODO.md
 
