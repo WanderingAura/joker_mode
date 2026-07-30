@@ -1,4 +1,5 @@
 #pragma once
+#include "based_arena.h"
 #include "raylib.h"
 #include "efs_entity.h"
 #include "core_tilemap.h"
@@ -6,6 +7,7 @@
 #include "core_entity_types.h"
 #include "core_menu_state.h"
 #include "render_font_types.h"
+#include "bullet.h"
 
 typedef struct
 {

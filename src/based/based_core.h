@@ -27,9 +27,15 @@
 ////////////////////////////////
 //~ rjf: Codebase Keywords
 
+#if 0 // since ryan fleury uses unity build we need to turn off the internal keyword
 #define internal      static
 #define global        static
 #define local_persist static
+#else
+#define internal
+#define global        static
+#define local_persist static
+#endif
 
 #if COMPILER_MSVC || (COMPILER_CLANG && OS_WINDOWS)
 # pragma section(".rdata$", read)
@@ -157,7 +163,6 @@
 #define Max(A,B) (((A)>(B))?(A):(B))
 #define ClampTop(A,X) Min(A,X)
 #define ClampBot(X,B) Max(X,B)
-#define Clamp(A,X,B) (((X)<(A))?(A):((X)>(B))?(B):(X))
 
 ////////////////////////////////
 //~ rjf: Type -> Alignment
