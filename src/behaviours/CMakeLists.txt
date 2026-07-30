@@ -22,4 +22,4 @@ target_sources(behaviours PRIVATE
 joker_target_link_raylib(behaviours)
 
 target_include_directories(behaviours PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(behaviours PRIVATE based efs gameplay_interface game_api)
+target_link_libraries(behaviours PRIVATE based efs gameplay_interface level game_api)
