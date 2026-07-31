@@ -23,7 +23,7 @@ static void ProjectileTemplatesInit(efs_Entity template_table[ProjectileTypeCoun
     template_table[ProjectileNormal].damage = 3;
     template_table[ProjectileNormal].canDamage = PlayerGroup;
     template_table[ProjectileNormal].baseMoveSpeed = 350.0f;
-    template_table[ProjectileNormal].despawnDistance = 300.0f;
+    template_table[ProjectileNormal].despawnDistance = 1000.0f;
     template_table[ProjectileNormal].texture = textures[TextureProjectile];
     template_table[ProjectileNormal].rect.width = PROJ_SIZE;
     template_table[ProjectileNormal].rect.height = PROJ_SIZE;

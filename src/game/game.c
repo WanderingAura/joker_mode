@@ -16,6 +16,7 @@
 #include "efs_entity_props.h"
 #include "gameover.h"
 #include "render_font.h"
+#include "bullet.h"
 #include "lvl_collision.h"
 #include "core_wall.h"
 #include "prop_behaviours.h"
@@ -86,8 +87,8 @@ void InitEntities(soc_GameMemory* memory)
     efs_Entity spawner = ProjectileSpawnerCreate(SpawnerNormal, middleOfScreen, (Vector2){1.0f, 0.0f}, spawnedInfo);
     efs_PoolAdd(&memory->efs_entityPool, spawner);
 
-    efs_Entity wall = CreateWall((Rectangle){100.0f, 100.0f, 100.0f, 100.0f}, memory->textures[TextureWall]);
-    efs_PoolAdd(&memory->efs_entityPool, wall);
+    // efs_Entity wall = CreateWall((Rectangle){100.0f, 100.0f, 100.0f, 100.0f}, memory->textures[TextureWall]);
+    // efs_PoolAdd(&memory->efs_entityPool, wall);
 }
 
 void DrawBounds(BoundingRect bounds)
@@ -254,13 +255,18 @@ void MainGameUpdate(soc_GameMemory* memory)
     EndDrawing();
 }
 
+void InitBulletHellTest(soc_GameMemory* memory)
+{
+    bullet_pool_init(&memory->bullet_pool);
+}
+
 void TitleScreenUpdate(soc_GameMemory* memory)
 {
     int key = GetKeyPressed();
     if (key != 0)
     {
-        memory->menuState = MenuState_MainGame;
-        InitDemoLevel(memory);
+        memory->menuState = MenuState_BulletHellTest;
+        InitBulletHellTest(memory);
     }
 
     Font* fonts = memory->fonts;
@@ -278,6 +284,47 @@ void TitleScreenUpdate(soc_GameMemory* memory)
     alphaCount++;
 }
 
+void BulletHellUpdate(soc_GameMemory* memory)
+{
+    static int frame_count = 0;
+    int key = GetKeyPressed();
+    if (key == KEY_SPACE)
+    {
+        memory->menuState = MenuState_MainGame;
+        InitDemoLevel(memory);
+    }
+    if (key == KEY_R)
+    {
+        InitBulletHellTest(memory); // restart the screen
+    }
+
+    if (frame_count % (2*60) == 0)
+    {
+        bullet_spawn_linear_spew(&memory->bullet_pool, (Vector2){400,300}, 20, 60.0f, 2.0f, RED);
+    }
+
+    if (frame_count % (3*60) == 0)
+    {
+        bullet_spawn_inward_spiral(&memory->bullet_pool, (Vector2){600,300}, 2, 200, 10, 10, 3, GREEN);
+    }
+
+    static int alphaCount = 0;
+    float alpha = ( (sinf((float)alphaCount / 10.0f) + 1.0f )* 0.5f );
+    BeginDrawing();
+        ClearBackground(BLUE);
+        DrawText("PRESS SPACE TO EXIT TEST SCREEN", 250, 500, 20, Fade(DARKBLUE, alpha));
+
+        bullet_list_for_each(&memory->bullet_pool.active_list, b)
+        {
+            bullet_update(b);
+            bullet_draw(b);
+        }
+        DrawFPS(10, 10);
+    EndDrawing();
+    alphaCount++;
+    frame_count++;
+}
+
 SOC_EXPORT void soc_GameUpdate(soc_GameMemory* memory)
 {
     switch (memory->menuState)
@@ -285,6 +332,10 @@ SOC_EXPORT void soc_GameUpdate(soc_GameMemory* memory)
         case MenuState_Title:
         {
             TitleScreenUpdate(memory);
+        } break;
+        case MenuState_BulletHellTest:
+        {
+            BulletHellUpdate(memory);
         } break;
         case MenuState_MainGame:
         {

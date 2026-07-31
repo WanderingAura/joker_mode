@@ -1,13 +1,8 @@
 #include "bullet.h"
 #include "based_logging.h"
+#include "raymath.h"
 
-inline f32 calc_sin_pattern(f32 t, f32 amp, f32 freq, f32 phase)
-{
-    f32 result = amp * sinf(freq * t - phase);
-    return result;
-}
-
-inline f32 calc_linear_pattern(f32 t, f32 speed)
+static inline f32 calc_linear_pattern(f32 t, f32 speed)
 {
     f32 result = t * speed;
     return result;
@@ -24,7 +19,23 @@ inline f32 calc_cubic_easein_pattern(f32 t, f32 duration)
     return result;
 }
 
-inline f32 val_from_pattern(const MovementInfo* info, f32 t)
+// Linear ramp from 1 down to 0 over [0, decay_duration]; decay_duration <= 0 disables decay.
+static inline f32 sinusoid_envelope(f32 t, f32 decay_duration)
+{
+    if (decay_duration <= 0.0f)
+    {
+        return 1.0f;
+    }
+    return ClampBot(1.0f - t / decay_duration, 0.0f);
+}
+static inline f32 calc_sin_pattern(f32 t, f32 amp, f32 freq, f32 phase)
+{
+    f32 result = amp * sinf(freq * t - phase);
+    return result;
+}
+
+
+static inline f32 val_from_pattern(const MovementInfo* info, f32 t)
 {
     f32 result = 0;
     switch (info->pattern)
@@ -35,7 +46,8 @@ inline f32 val_from_pattern(const MovementInfo* info, f32 t)
         } break;
         case Pattern_Sinusoidal:
         {
-            result += calc_sin_pattern(t, info->amp, info->freq, info->phase);
+            f32 envelope = sinusoid_envelope(t, info->decay_duration);
+            result += envelope * calc_sin_pattern(t, info->amp, info->freq, info->phase);
         } break;
         default:
         {
@@ -45,9 +57,9 @@ inline f32 val_from_pattern(const MovementInfo* info, f32 t)
     return result;
 }
 
-Vector2 calc_pos_from_patterns(MovementInfo* infos_x, MovementInfo* infos_y, Vector2 init_pos, f32 t)
+Vector2 calc_pos_from_patterns(MovementInfo* infos_x, MovementInfo* infos_y, Vector2 init_pos, f32 t, f32 rotation)
 {
-    Vector2 current_pos = init_pos;
+    Vector2 current_pos = {};
 
     for (u32 i = 0; i < MAX_SIMUL_PATTERNS; i++)
     {
@@ -65,6 +77,10 @@ Vector2 calc_pos_from_patterns(MovementInfo* infos_x, MovementInfo* infos_y, Vec
         current_pos.x += val_from_pattern(&info_x, t);
         current_pos.y += val_from_pattern(&info_y, t);
     }
+    
+    // rotate and offset the final pattern
+    current_pos = Vector2Rotate(current_pos, rotation);
+    current_pos = Vector2Add(current_pos, init_pos);
 
     return current_pos;
 }
@@ -115,7 +131,7 @@ void bullet_update(Bullet* bullet)
     {
         bullet->parametric_speed = val_from_pattern(&bullet->speed_info, bullet->time_since_spawn);
 
-        bullet->pos = calc_pos_from_patterns(bullet->move_info_x, bullet->move_info_y, bullet->init_pos, bullet->time_since_spawn);
+        bullet->pos = calc_pos_from_patterns(bullet->move_info_x, bullet->move_info_y, bullet->init_pos, bullet->time_since_spawn, bullet->rotation);
     }
     else if (bullet->move_type == MovementType_Velocity)
     {
@@ -132,4 +148,184 @@ void bullet_update(Bullet* bullet)
 void bullet_draw(Bullet* bullet)
 {
     DrawCircle(bullet->x, bullet->y, bullet->radius, bullet->color);
+}
+
+void bullet_list_init(Bullet* sentinel)
+{
+    sentinel->next = sentinel;
+    sentinel->prev = sentinel;
+}
+
+bool bullet_list_is_empty(const Bullet* sentinel)
+{
+    return sentinel->next == sentinel;
+}
+
+// Inserts `node` immediately before `position` (position may be the sentinel
+// itself, which inserts at the back of the list).
+void bullet_list_insert_before(Bullet* position, Bullet* node)
+{
+    node->prev = position->prev;
+    node->next = position;
+    position->prev->next = node;
+    position->prev = node;
+}
+
+void bullet_list_push_back(Bullet* sentinel, Bullet* node)
+{
+    bullet_list_insert_before(sentinel, node);
+}
+
+void bullet_list_push_front(Bullet* sentinel, Bullet* node)
+{
+    bullet_list_insert_before(sentinel->next, node);
+}
+
+// Unlinks `node` from whatever list it's currently in. `node` must be
+// re-inserted into a list before its next/prev fields are used again.
+void bullet_list_remove(Bullet* node)
+{
+    node->prev->next = node->next;
+    node->next->prev = node->prev;
+}
+
+void bullet_pool_init(BulletPool* pool)
+{
+    bullet_list_init(&pool->free_list);
+    bullet_list_init(&pool->active_list);
+
+    for (u32 i = 0; i < BULLET_POOL_SIZE; i++)
+    {
+        bullet_list_push_back(&pool->free_list, &pool->storage[i]);
+    }
+}
+
+// Returns NULL if the pool is exhausted.
+Bullet* bullet_pool_alloc(BulletPool* pool)
+{
+    if (bullet_list_is_empty(&pool->free_list))
+    {
+        return NULL;
+    }
+
+    Bullet* bullet = pool->free_list.next;
+    bullet_list_remove(bullet);
+    bullet_list_push_back(&pool->active_list, bullet);
+    return bullet;
+}
+
+void bullet_pool_free(BulletPool* pool, Bullet* bullet)
+{
+    bullet_list_remove(bullet);
+    bullet_list_push_back(&pool->free_list, bullet);
+}
+
+MovementInfo movement_linear(f32 speed)
+{
+    MovementInfo info = {0};
+    info.pattern = Pattern_Linear;
+    info.speed = speed;
+    return info;
+}
+
+// decay_duration <= 0 keeps amp constant; otherwise amp ramps linearly to 0 by t = decay_duration.
+MovementInfo movement_sinusoidal(f32 amp, f32 freq, f32 phase, f32 decay_duration)
+{
+    MovementInfo info = {0};
+    info.pattern = Pattern_Sinusoidal;
+    info.amp = amp;
+    info.freq = freq;
+    info.phase = phase;
+    info.decay_duration = decay_duration;
+    return info;
+}
+
+// Pattern_Sinusoidal with freq = 0 collapses to a t-invariant value: sinf(0*t - phase) ==
+// sinf(-phase). With phase = -PI/2 that's sinf(PI/2) == 1, so val_from_pattern returns
+// exactly `value` for every t. This is how a constant is expressed using only the two
+// implemented patterns (Pattern_Constant is declared but unimplemented in val_from_pattern).
+MovementInfo movement_constant(f32 value)
+{
+    MovementInfo info = {0};
+    info.pattern = Pattern_Sinusoidal;
+    info.amp = value;
+    info.freq = 0.0f;
+    info.phase = -PI / 2.0f;
+    return info;
+}
+
+// Shared setup for freshly-allocated bullets: resets every field a spawner would
+// otherwise need to clear itself, without touching next/prev (bullet_pool_alloc has
+// already spliced `bullet` into the pool's active list).
+void bullet_init_common(Bullet* bullet, Vector2 pos, f32 radius, Color color)
+{
+    bullet->pos = pos;
+    bullet->init_pos = pos;
+    bullet->vel = (Vector2){0};
+    bullet->radius = radius;
+    bullet->time_since_spawn = 0.0f;
+    bullet->rotation = 0.0f;
+    bullet->color = color;
+    bullet->move_type = MovementType_Parametric;
+
+    MemoryZeroArray(bullet->move_info_x);
+    MemoryZeroArray(bullet->move_info_y);
+
+    bullet->parametric_speed = 1.0f;
+    bullet->speed_info = movement_constant(1.0f);
+
+    bullet->target = NULL;
+    bullet->targeting_type = TargetType_Direct;
+}
+
+// A set of `count` bullets that all share one local trajectory - a straight line along
+// local +x at `speed` - and are fanned out into evenly spaced directions purely via
+// `rotation`. Classic N-way radial burst from a single point.
+void bullet_spawn_linear_spew(BulletPool* pool, Vector2 origin, u32 count, f32 speed, f32 radius, Color color)
+{
+    for (u32 i = 0; i < count; i++)
+    {
+        Bullet* bullet = bullet_pool_alloc(pool);
+        if (bullet == NULL)
+        {
+            break;
+        }
+
+        bullet_init_common(bullet, origin, radius, color);
+
+        bullet->rotation = (f32)i * (2.0f * PI / (f32)count);
+        bullet->move_info_x[0] = movement_linear(speed);
+        bullet->move_info_y[0] = movement_linear(0.0f);
+    }
+}
+
+// A set of `count` bullets spawned on a ring of `orbit_radius` around `target`. Each bullet
+// traces a genuine spiral: sinusoids on both local axes, 90 degrees out of phase (amp*cos,
+// amp*sin), produce circular motion around `target`, and the shared decay envelope shrinks
+// that circle's radius linearly to 0 by `collapse_duration`, so every bullet spirals inward
+// and lands exactly on `target`.
+void bullet_spawn_inward_spiral(BulletPool* pool, Vector2 target, u32 count, f32 orbit_radius, f32 orbit_freq, f32 collapse_duration, f32 radius, Color color)
+{
+    for (u32 i = 0; i < count; i++)
+    {
+        Bullet* bullet = bullet_pool_alloc(pool);
+        if (bullet == NULL)
+        {
+            break;
+        }
+
+        f32 spawn_angle = (f32)i * (2.0f * PI / (f32)count);
+
+        bullet_init_common(bullet, (Vector2){0,0}, radius, color);
+
+        // The orbit circles around `target`, not `spawn_pos` - override the rotation
+        // anchor bullet_init_common set, without touching next/prev/pos.
+        bullet->init_pos = target;
+
+        // `rotation` places each bullet's local +x (where its orbit starts, at t=0) at
+        // its spawn angle around the ring.
+        bullet->rotation = spawn_angle;
+        bullet->move_info_x[0] = movement_sinusoidal(orbit_radius, orbit_freq, -PI / 2.0f, collapse_duration);
+        bullet->move_info_y[0] = movement_sinusoidal(orbit_radius, orbit_freq, 0.0f, collapse_duration);
+    }
 }

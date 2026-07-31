@@ -1,3 +1,4 @@
+#pragma once
 #include <raylib.h>
 #include <math.h>
 #include <raymath.h>
@@ -38,6 +39,7 @@ typedef struct
             f32 amp;
             f32 freq;
             f32 phase;
+            f32 decay_duration; // amp ramps linearly to 0 over [0, decay_duration]; <= 0 means no decay (constant amp)
         };
 
         struct // linear
@@ -59,7 +61,7 @@ typedef struct
 
 struct Entity_;
 
-typedef struct
+typedef struct Bullet_
 {
     // position
     union
@@ -96,6 +98,7 @@ typedef struct
 
     f32 radius;
     f32 time_since_spawn;
+    f32 rotation;
     Color color;
 
     MovementType move_type;
@@ -113,7 +116,49 @@ typedef struct
 
     struct Entity_* target;
     TargetType targeting_type;
+
+    struct Bullet_* next;
+    struct Bullet_* prev;
 } Bullet;
+
+
+// Bullet Pool Allocator
+#define BULLET_POOL_SIZE 65536
+
+#define bullet_list_for_each(sentinel, it) \
+    for (Bullet* (it) = (sentinel)->next; (it) != (sentinel); (it) = (it)->next)
+
+// It's safe to free nodes during iteration here
+#define bullet_list_for_each_safe(sentinel, it, tmp) \
+    for (Bullet* (it) = (sentinel)->next, *(tmp) = (it)->next; \
+         (it) != (sentinel); \
+         (it) = (tmp), (tmp) = (it)->next)
+
+typedef struct BulletPool
+{
+    Bullet storage[BULLET_POOL_SIZE];
+
+    // Sentinels for the free/active intrusive lists. These are not real
+    // bullets - only their next/prev fields are ever touched.
+    Bullet free_list;
+    Bullet active_list;
+} BulletPool;
+
+void bullet_list_init(Bullet* sentinel);
+bool bullet_list_is_empty(const Bullet* sentinel);
+void bullet_list_insert_before(Bullet* position, Bullet* node);
+void bullet_list_push_back(Bullet* sentinel, Bullet* node);
+void bullet_list_push_front(Bullet* sentinel, Bullet* node);
+void bullet_list_remove(Bullet* node);
+
+void bullet_pool_init(BulletPool* pool);
+Bullet* bullet_pool_alloc(BulletPool* pool);
+void bullet_pool_free(BulletPool* pool, Bullet* bullet);
+
+// Example parametric spawn patterns - both built from only Pattern_Linear and
+// Pattern_Sinusoidal.
+void bullet_spawn_linear_spew(BulletPool* pool, Vector2 origin, u32 count, f32 speed, f32 radius, Color color);
+void bullet_spawn_inward_spiral(BulletPool* pool, Vector2 target, u32 count, f32 orbit_radius, f32 orbit_freq, f32 collapse_duration, f32 radius, Color color);
 
 typedef enum
 {
@@ -131,3 +176,6 @@ typedef struct Entity_
         Bullet bullet;
     };
 } Entity;
+
+void bullet_update(Bullet* bullet);
+void bullet_draw(Bullet* bullet);

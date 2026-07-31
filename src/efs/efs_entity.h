@@ -44,7 +44,7 @@ typedef struct efs_Entity {
     float despawnDistance;
     efs_Child childInfo; // contains template for entities
     Vector2 spawnedEntityDir;
-    struct efs_Entity* following; // watch out for dangling references
+    struct efs_Entity* following; // this should really be a generational index so that we can solve dangling references.
     Texture2D texture;
 } efs_Entity;
 

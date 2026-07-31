@@ -63,6 +63,7 @@ typedef struct {
     GameMenuState menuState;
 
     GameoverData gameoverData;
+    BulletPool bullet_pool;
 } soc_GameMemory;
 
 soc_GameMemory* core_GameMemoryGet();
