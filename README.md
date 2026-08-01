@@ -3,7 +3,7 @@
 A game about the slippery slope of punishing crime.
 
 - Supports hot reloading: updating the code while it's still running!
-- Supports hiscores to be posted to an HTTP server
+- Supports hiscores to be posted to an HTTP server running a ESP32
 - Everything is cross platform for Windows + Linux
 
 Gameplay very much WIP.
@@ -19,9 +19,6 @@ export SOCHISCORE_PORT=49944
 export SOCHISCORE_ENDPOINT="/hiscores"
 ```
 
-# TODO
-see TODO.md
-
 # Building on Windows
 
 Prerequisites:
@@ -35,7 +32,7 @@ has nmake and cl.exe available.
 build.bat <debug|release>
 ```
 
-~~Once you have built once successfully `build_unity.bat` can be run to rebuild the game dll: soc.dll. This is surprisingly soooo much faster than the incremental build cmake offers. This was added to make hot reloading nearly instant on Windows.~~ (WIP: need to make unity build auto update when there are new files)
+Once you have built once successfully `.\unity_build\build_windows.bat` can be run to rebuild the game dll: soc.dll. This is much faster than CMake Visual Studio generator (because it needs to generate lots of VS slop files) and slightly faster than CMake Ninja because it only has to compile a single file. The goal here was to make hot-reloading near instant.
 
 # Building on Linux
 Prerequisites:
@@ -47,7 +44,11 @@ Prerequisites:
 build.sh <debug|release>
 ```
 
+Similarly to windows, soc.dll can be built with unity build via `.\unity_build\build_linux.sh`.
+
 # Building via CMake
+
+The above build.sh and build.bat scripts are just wrappers for cmake. You can invoke cmake directly to build.
 
 Prerequisites:
 - CMake
@@ -94,3 +95,12 @@ On the game side there's two defines that you need to change:
 These should be self explanatory.
 
 And you're done!
+
+# Example Screenshots
+
+![alt text](example-screenshots/title_screen.png.png)
+![alt text](example-screenshots/gameover_screen.png)
+![alt text](example-screenshots/scoreboard.png)
+
+# TODO
+see TODO.md
