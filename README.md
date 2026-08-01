@@ -98,9 +98,9 @@ And you're done!
 
 # Example Screenshots
 
-![alt text](example-screenshots/title_screen.png.png)
-![alt text](example-screenshots/gameover_screen.png)
-![alt text](example-screenshots/scoreboard.png)
+![title screen](example-screenshots/title_screen.png)
+![gameover screen](example-screenshots/gameover_screen.png)
+![scoreboard](example-screenshots/scoreboard.png)
 
 # TODO
 see TODO.md
