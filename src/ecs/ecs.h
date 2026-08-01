@@ -1,3 +1,4 @@
+#if 0
 #pragma once
 
 #include "based_basic.h"
@@ -43,3 +44,4 @@ typedef struct ECS_Entity
     ECS_BoundaryType geometryType;
 
 } ECS_Entity;
+#endif

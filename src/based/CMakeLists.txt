@@ -13,5 +13,6 @@ target_compile_options(based PRIVATE -fPIC)
 target_include_directories(based
     PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/..
 )
+
+target_link_libraries(based PRIVATE vos_interface)

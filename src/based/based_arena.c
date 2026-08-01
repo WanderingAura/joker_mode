@@ -7,7 +7,7 @@
 //- rjf: arena creation/destruction
 #include "based_arena.h"
 
-#include "vos/vos.h"
+#include "vos.h"
 
 internal Arena *
 arena_alloc_(ArenaParams *params)

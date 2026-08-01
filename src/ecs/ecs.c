@@ -1,3 +1,4 @@
+#if 0
 #include "ecs.h"
 
 #define MAX_ENTITIES 65536
@@ -18,3 +19,4 @@ static void ecs_init()
 static ECS_Entity* ecs_entity_create()
 {
 }
+#endif

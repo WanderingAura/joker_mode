@@ -16,3 +16,6 @@ else()
 endif()
 
 target_link_libraries(vos PRIVATE based)
+
+add_library(vos_interface INTERFACE)
+target_include_directories(vos_interface INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
