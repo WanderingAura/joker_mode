@@ -175,7 +175,7 @@ void MainGameUpdate(soc_GameMemory* memory)
         memory->menuState = MenuState_GameOver;
         memory->gameoverData.state = GameoverState_InputScore;
     }
-
+    memory->camera.target = memory->player->pos;
     BeginDrawing();
     {
         ClearBackground(BLACK);
