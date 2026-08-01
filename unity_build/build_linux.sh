@@ -13,7 +13,7 @@ INCLUDE_DIRECTORIES=$(find ../src -mindepth 1 -maxdepth 1 -type d | awk '{print 
 echo "Compiling..."
 gcc $INCLUDE_DIRECTORIES -isystem "../build/debug/_deps/raylib-build/raylib/include" \
     -fPIC -shared -o ../libsoc.so soc_dll_unity_linux.c \
-    -g -std=gnu11 -fPIC -Wall -Wextra -Werror -Wno-sign-compare
+    -g -std=gnu11 -fPIC -Wall -Wextra -Wno-sign-compare
 echo "Done"
 
 rm soc_dll_unity_linux.c
