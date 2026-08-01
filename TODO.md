@@ -41,3 +41,6 @@
 - [x] fix the game over leaderboard screen so that it displays less than 10 hiscores if there are < 10
 - [x] change debugging logs to be dynamic at runtime based on env var
 
+- [x] make a test screen to test out a reworked bullet type that follows parametric equations
+
+- [ ] sort out all the dummy warnings caused by dumping raddbg base layer code into the codebase

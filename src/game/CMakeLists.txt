@@ -6,6 +6,9 @@ joker_target_link_raylib(soc)
 target_sources(soc PRIVATE
     core_game_memory.c
     game.c
+    title_screen.c
+    test_screen.c
+    demo_level.c
     gameover.c
 )
 
