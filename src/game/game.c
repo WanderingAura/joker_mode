@@ -276,8 +276,8 @@ void TitleScreenUpdate(soc_GameMemory* memory)
         ClearBackground(BLACK);
         DrawTextEx(
             fonts[FontTypeTitle],
-            "The Vigilantes",
-            (Vector2){200, 200},
+            "Joker Mode",
+            (Vector2){245, 200},
             40, 4, DARKBLUE);
         DrawText("PRESS ANY KEY TO START", 250, 500, 20, Fade(DARKBLUE, alpha));
     EndDrawing();

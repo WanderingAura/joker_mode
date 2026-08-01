@@ -3,6 +3,7 @@
 
 ////////////////////////////////
 //~ rjf: Safe Casts
+#include "based_core.h"
 
 internal U16
 safe_cast_u16(U32 x)
