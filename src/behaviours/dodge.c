@@ -33,7 +33,6 @@ void handle_dodge(efs_Entity* entity) {
     entity->pos = Vector2Add(entity->pos, Vector2Scale(entity->dodgeDirection, entity->baseMoveSpeed*DODGE_SPEED_SCALE*deltaTime));
     entity->dodgeTimer -= deltaTime;
     if(entity->dodgeTimer <= 0) {
-      printf("ending dodge");
       //should we be removing this? might be getting set from somewhere else?
       efs_EntityUnsetProperty(entity, efs_prop_Invincible);
       entity->dodgeCooldown = DODGE_COOLDOWN;

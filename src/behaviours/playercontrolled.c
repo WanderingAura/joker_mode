@@ -59,7 +59,6 @@ void MoveAndResolveCollisions(efs_Entity* player, efs_EntityPool* pool)
 int handle_playerControlled(efs_Entity* entity, soc_GameMemory* memory) {
     if(efs_EntityHasProperty(entity, efs_prop_PlayerControlled)) {
         if(entity->dodgeTimer >= 0) {
-            printf("blocking during dodge");
             //prevent move while in roll
             return 0;
         }
@@ -82,14 +81,11 @@ int handle_playerControlled(efs_Entity* entity, soc_GameMemory* memory) {
             entity->dir.x += 1.0f;
         }
         if(isDodge && (entity->dir.x != 0 || entity->dir.y != 0 ) && entity->dodgeCooldown <= 0) {
-            printf("stating dodge");
             entity->dodgeDirection = Vector2Normalize(entity->dir);
             entity->dodgeTimer = DODGE_DURATION;
             
         } else {
             entity->dir = Vector2Normalize(entity->dir);
-            memory->camera.target = entity->pos;
-    
             MoveAndResolveCollisions(entity, &memory->efs_entityPool);
         }
     }
