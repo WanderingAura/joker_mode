@@ -17,6 +17,7 @@ target_sources(behaviours PRIVATE
     solid.c
     spawner.c
     tempinvincible.c
+    dodge.c
 )
 
 joker_target_link_raylib(behaviours)

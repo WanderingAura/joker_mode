@@ -26,9 +26,13 @@
 int handle_tempInvincible(efs_Entity* entity) {
     if (efs_EntityHasProperty(entity, efs_prop_TempInvincible))
     {
+        //kinda scuffed in case we unset it from somewhere else
+        //could fix this by having custom getters and setters for each prop :3
+        efs_EntitySetProperty(entity, efs_prop_Invincible);
         entity->invincibleTimer -= GetFrameTime();
         if (entity->invincibleTimer < 0)
         {
+            efs_EntityUnsetProperty(entity, efs_prop_Invincible);
             efs_EntityUnsetProperty(entity, efs_prop_TempInvincible);
         }
     }

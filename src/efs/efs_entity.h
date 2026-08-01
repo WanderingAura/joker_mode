@@ -5,6 +5,10 @@
 
 #define ENTITY_POOL_SIZE 1024
 
+#define DODGE_SPEED_SCALE 1.5
+#define DODGE_COOLDOWN 2
+#define DODGE_DURATION 1
+
 struct efs_Entity;
 
 typedef enum DamageGroup {
@@ -39,6 +43,9 @@ typedef struct efs_Entity {
     Vector2 offsetFromParent;
     int health;
     DamageGroup damageGroup;
+    Vector2 dodgeDirection;
+    float dodgeTimer;
+    float dodgeCooldown;
     int damage;
     DamageGroup canDamage;
     float despawnDistance;

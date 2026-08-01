@@ -37,6 +37,7 @@ void InitEntities(soc_GameMemory* memory)
     efs_EntitySetProperty(&guy, efs_prop_PlayerControlled);
     efs_EntitySetProperty(&guy, efs_prop_HasHealth);
     efs_EntitySetProperty(&guy, efs_prop_ShootsAtMouse);
+    efs_EntitySetProperty(&guy, efs_prop_CanDodge);
     guy.health = 10;
     guy.damageGroup = PlayerGroup;
     guy.dir.x = 0.0f;
@@ -162,6 +163,7 @@ void MainGameUpdate(soc_GameMemory* memory)
             handle_canDamage(entity, memory, index);
             handle_tempInvincible(entity);
             handle_despawnWhenFarFromPlayer(entity, memory, player, index);
+            handle_dodge(entity);
             index = nextIndex;
         }
     }

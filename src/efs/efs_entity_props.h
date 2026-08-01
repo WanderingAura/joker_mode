@@ -19,7 +19,9 @@ typedef enum {
     efs_prop_CanDamage,
     efs_prop_Spawner,
     efs_prop_MovesBetweenTwoPoints,
-    efs_prop_TempInvincible,
+    efs_prop_CanDodge,
+    efs_prop_TempInvincible, //removes efs_prop_Invincible after time passes
+    efs_prop_Invincible,
     efs_prop_DespawnWhenFarFromPlayer,
     efs_prop_ScalesWithDifficulty,
     efs_prop_Solid, // stops the player from moving through it
