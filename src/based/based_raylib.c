@@ -1,14 +1,21 @@
 #include <math.h>
 #include "based_raylib.h"
 
-// it shouldn't be up to the consumer to call this only once per frame.
-// TODO: add a flag to this function so that it only calls sine once per frame
-float GetPeriodicTime(float start, float end, float periodSeconds)
+static inline f32 AngularFreq(f32 freq)
 {
-    static float counter = 0;
-    counter += GetFrameTime() * (2.0f * PI) / periodSeconds;
-    float midpoint = (end + start) / 2.0f;
-    float halfDist = (end - start) / 2.0f;
+    return 2.0f * PI * freq;
+}
 
-    return midpoint + (halfDist * sinf(counter));
+Color PeriodicFade_(Color c, PeriodicFadeParams params)
+{
+    DBG_ASSERT_MSG(params.low >= 0 && params.low <= 1, "invalid params");
+    DBG_ASSERT_MSG(params.high >= 0 && params.high <= 1, "invalid params");
+    DBG_ASSERT_MSG(params.low < params.high, "invalid params");
+
+    f32 midpoint = (params.high + params.low) / 2.0f;
+    f32 half_dist = (params.high - params.low) / 2.0f;
+
+    f32 alpha = midpoint + (half_dist * cosf(AngularFreq(params.freq) * GetTime()));
+
+    return Fade(c, alpha);
 }

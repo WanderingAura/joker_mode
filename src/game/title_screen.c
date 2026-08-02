@@ -1,5 +1,7 @@
 #include "core_menu_state.h"
 #include "core_game_memory.h"
+#include "based_raylib.h"
+#include "raylib.h"
 #include "test_screen.h"
 
 void TitleScreenUpdate(soc_GameMemory* memory)
@@ -11,9 +13,9 @@ void TitleScreenUpdate(soc_GameMemory* memory)
         InitBulletHellTest(memory);
     }
 
+    f32 time = GetTime();
+
     Font* fonts = memory->fonts;
-    static int alphaCount = 0;
-    float alpha = ( (sinf((float)alphaCount / 10.0f) + 1.0f )* 0.5f );
     BeginDrawing();
         ClearBackground(BLACK);
         DrawTextEx(
@@ -21,7 +23,7 @@ void TitleScreenUpdate(soc_GameMemory* memory)
             "Joker Mode",
             (Vector2){245, 200},
             40, 4, DARKBLUE);
-        DrawText("PRESS ANY KEY TO START", 250, 500, 20, Fade(DARKBLUE, alpha));
+        Color flashingDarkBlue = PeriodicFade(DARKBLUE);
+        DrawText("PRESS ANY KEY TO START", 250, 500, 20, flashingDarkBlue);
     EndDrawing();
-    alphaCount++;
 }

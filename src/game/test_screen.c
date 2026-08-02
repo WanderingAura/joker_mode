@@ -1,6 +1,7 @@
 #include "bullet.h"
 #include "core_game_memory.h"
 #include "demo_level.h"
+#include "based_raylib.h"
 
 void InitBulletHellTest(soc_GameMemory* memory)
 {
@@ -31,11 +32,10 @@ void BulletHellUpdate(soc_GameMemory* memory)
         bullet_spawn_inward_spiral(&memory->bullet_pool, (Vector2){600,300}, 2, 200, 10, 10, 3, GREEN);
     }
 
-    static int alphaCount = 0;
-    float alpha = ( (sinf((float)alphaCount / 10.0f) + 1.0f )* 0.5f );
     BeginDrawing();
         ClearBackground(BLUE);
-        DrawText("PRESS SPACE TO EXIT TEST SCREEN", 250, 500, 20, Fade(DARKBLUE, alpha));
+        Color flashingBlue = PeriodicFade(SKYBLUE);
+        DrawText("PRESS SPACE TO EXIT TEST SCREEN", 250, 500, 20, flashingBlue);
 
         bullet_list_for_each(&memory->bullet_pool.active_list, b)
         {
@@ -44,6 +44,5 @@ void BulletHellUpdate(soc_GameMemory* memory)
         }
         DrawFPS(10, 10);
     EndDrawing();
-    alphaCount++;
     frame_count++;
 }

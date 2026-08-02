@@ -235,16 +235,16 @@ void GameoverShowScores(GameoverData* data)
     {
         core_GameMemoryGet()->menuState = MenuState_Title;
     }
-    float periodic = GetPeriodicTime(0.3f, 1.0f, 1.2f);   
 
-    Color playAgainColor = Fade(SKYBLUE, periodic);
+    f32 time = GetTime();
 
     BeginDrawing();
         ClearBackground(BG_COLOR);
 
         DrawScoreBoard(&data->scoreboard, (Vector2){200, 80});
 
-        DrawText("Press any button to play again!", 220, 520, 20, playAgainColor);
+        Color flashingBlue = PeriodicFade(SKYBLUE);
+        DrawText("Press any button to play again!", 220, 520, 20, flashingBlue);
     EndDrawing();
 }
 
@@ -302,13 +302,13 @@ void GameoverInputScore(GameoverData* data)
         data->state = GameoverState_LoadingScore;
     }
 
-    float periodic = GetPeriodicTime(0.6f, 1.0f, 1.2f);   
-
-    Color gameOverColor = ColorTint(RED, Fade(bsd_BRIGHT_RED, periodic));
+    f32 time = GetTime();
 
     BeginDrawing();
         ClearBackground(BG_COLOR);
-        DrawText("Game Over!", 250, 150, 60, gameOverColor);
+
+        Color flashingBrightRed = PeriodicFade(bsd_BRIGHT_RED);
+        DrawText("Game Over!", 250, 150, 60, flashingBrightRed);
         DrawText("Enter your username to record your score!", 200, 320, 20, RAYWHITE);
         DrawRectangleRec(textBox, LIGHTGRAY);
         DrawRectangleLines((int)textBox.x, (int)textBox.y, (int)textBox.width, (int)textBox.height, RED);
