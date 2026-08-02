@@ -6,6 +6,7 @@
 #include "core_game_memory.h"
 #include "raylib.h"
 #include "based_core.h"
+#include "ui_config.h"
 
 #define HISCORE_SERVER_HOST "sochiscore.duckdns.org"
 #define HISCORE_SERVER_PORT 49944
@@ -180,6 +181,13 @@ void GameoverLoadScores(GameoverData* data)
     }
 }
 
+void DrawGameOverText(f32 y)
+{
+    Color flashingBrightRed = PeriodicFade(bsd_BRIGHT_RED);
+    DrawHCentreScreenText("GAME OVER", y, FONT_H1_SIZE, flashingBrightRed);
+}
+
+// TODO: fix all these magic numbers
 void DrawScoreBoard(const Scoreboard* scoreboard, Vector2 topleft)
 {
     DrawRectangle(topleft.x, topleft.y, 400, 400, BROWN);
@@ -236,15 +244,13 @@ void GameoverShowScores(GameoverData* data)
         core_GameMemoryGet()->menuState = MenuState_Title;
     }
 
-    f32 time = GetTime();
-
     BeginDrawing();
         ClearBackground(BG_COLOR);
 
         DrawScoreBoard(&data->scoreboard, (Vector2){200, 80});
 
         Color flashingBlue = PeriodicFade(SKYBLUE);
-        DrawText("Press any button to play again!", 220, 520, 20, flashingBlue);
+        DrawHCentreScreenText("Press any button to play again!", 520, FONT_BODY_SIZE, flashingBlue);
     EndDrawing();
 }
 
@@ -256,16 +262,15 @@ void GameoverScreenNoScores(GameoverData* data)
     {
         core_GameMemoryGet()->menuState = MenuState_Title;
     }
-    static int alphaCount = 0;
-    float alpha = ( (sinf((float)alphaCount / 10.0f) + 1.0f )* 0.5f );
     BeginDrawing();
         ClearBackground(BG_COLOR);
-        DrawText("GAME OVER", 200, 200, 60, DARKBLUE);
-        DrawText("Failed to connect to hiscores server...", 200, 100, 20, DARKBLUE);
-        DrawText(TextFormat("Score: %d", scoreboard->userScore.score), 200, 300, 40, GREEN);
-        DrawText("PRESS ANY KEY TO RETURN TO TITLE SCREEN", 120, 500, 20, Fade(DARKBLUE, alpha));
+        DrawGameOverText(100);
+        DrawHCentreScreenText("Failed to connect to hiscores server", 200, FONT_BODY_SIZE, DARKBLUE);
+        DrawHCentreScreenText(TextFormat("Score: %d", scoreboard->userScore.score), 300, FONT_H2_SIZE, GREEN);
+
+        Color flashingDarkBlue = PeriodicFade(DARKBLUE);
+        DrawHCentreScreenText("PRESS ANY KEY TO RETURN TO TITLE SCREEN", 500, FONT_BODY_SIZE, flashingDarkBlue);
     EndDrawing();
-    alphaCount++;
 }
 
 #define MAX_INPUT_CHARS 10
@@ -302,14 +307,11 @@ void GameoverInputScore(GameoverData* data)
         data->state = GameoverState_LoadingScore;
     }
 
-    f32 time = GetTime();
-
     BeginDrawing();
         ClearBackground(BG_COLOR);
 
-        Color flashingBrightRed = PeriodicFade(bsd_BRIGHT_RED);
-        DrawText("Game Over!", 250, 150, 60, flashingBrightRed);
-        DrawText("Enter your username to record your score!", 200, 320, 20, RAYWHITE);
+        DrawGameOverText(200);
+        DrawHCentreScreenText("Enter your username to record your score!", 320, 20, RAYWHITE);
         DrawRectangleRec(textBox, LIGHTGRAY);
         DrawRectangleLines((int)textBox.x, (int)textBox.y, (int)textBox.width, (int)textBox.height, RED);
         DrawText(name, (int)textBox.x + 5, (int)textBox.y + 8, 40, MAROON);

@@ -3,6 +3,7 @@
 #include "based_raylib.h"
 #include "raylib.h"
 #include "test_screen.h"
+#include "ui_config.h"
 
 void TitleScreenUpdate(soc_GameMemory* memory)
 {
@@ -13,8 +14,6 @@ void TitleScreenUpdate(soc_GameMemory* memory)
         InitBulletHellTest(memory);
     }
 
-    f32 time = GetTime();
-
     Font* fonts = memory->fonts;
     BeginDrawing();
         ClearBackground(BLACK);
@@ -24,6 +23,6 @@ void TitleScreenUpdate(soc_GameMemory* memory)
             (Vector2){245, 200},
             40, 4, DARKBLUE);
         Color flashingDarkBlue = PeriodicFade(DARKBLUE);
-        DrawText("PRESS ANY KEY TO START", 250, 500, 20, flashingDarkBlue);
+        DrawHCentreScreenText("PRESS ANY KEY TO START", 500, FONT_BODY_SIZE, flashingDarkBlue);
     EndDrawing();
 }

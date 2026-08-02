@@ -17,3 +17,5 @@ typedef struct {
 #define PeriodicFade(c, ...) PeriodicFade_(c, (PeriodicFadeParams){.freq = PERIODIC_FADE_FREQ, .low = PERIODIC_FADE_ALPHA_LOW, .high = PERIODIC_FADE_ALPHA_HIGH, __VA_ARGS__})
 
 Color PeriodicFade_(Color c, PeriodicFadeParams params);
+void DrawHCentreText(const char* text, f32 y, f32 fontSize, f32 lowX, f32 highX, Color color);
+void DrawHCentreScreenText(const char* text, f32 y, f32 fontSize, Color color);
