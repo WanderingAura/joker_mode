@@ -15,6 +15,7 @@
 #include <math.h>
 #include <string.h>
 
+#include "based_basic.h"
 #include "based_context_cracking.h"
 
 ////////////////////////////////
@@ -36,6 +37,8 @@
 #define global        static
 #define local_persist static
 #endif
+
+DISABLE_UNUSED_WARNING
 
 #if COMPILER_MSVC || (COMPILER_CLANG && OS_WINDOWS)
 # pragma section(".rdata$", read)
@@ -1074,4 +1077,5 @@ internal U64 index_of_zero_u32(U32 *ptr, U64 count);
 internal U64 index_of_zero_u64(U64 *ptr, U64 count);
 internal U64 count_digits_u64(U64 v, U64 radix);
 
+ENABLE_UNUSED_WARNING
 #endif // BASE_CORE_H

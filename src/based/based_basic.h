@@ -4,6 +4,25 @@
 #include <stdbool.h>
 #include "based_logging.h"
 
+#if defined(_MSC_VER)
+    #define DISABLE_UNUSED_WARNING \
+        __pragma(warning(push)) \
+        __pragma(warning(disable: 4101))
+        __pragma(warning(disable: 4505))
+    #define ENABLE_UNUSED_WARNING \
+        __pragma(warning(pop))
+#elif defined(__GNUC__) || defined(__clang__)
+    #define DISABLE_UNUSED_WARNING \
+        _Pragma("GCC diagnostic push") \
+        _Pragma("GCC diagnostic ignored \"-Wunused-variable\"")
+        _Pragma("GCC diagnostic ignored \"-Wunused-function\"")
+    #define ENABLE_UNUSED_WARNING \
+        _Pragma("GCC diagnostic pop")
+#else
+    #define DISABLE_UNUSED_WARNING
+    #define ENABLE_UNUSED_WARNING
+#endif
+
 /* ==== BASIC TYPES ==== */
 typedef uint8_t u8;
 typedef uint16_t u16;

@@ -4,6 +4,7 @@
 #ifndef BASE_ARENA_H
 #define BASE_ARENA_H
 
+#include "based_basic.h"
 #include "based_core.h"
 
 ////////////////////////////////
@@ -11,6 +12,7 @@
 
 #define ARENA_HEADER_SIZE 128
 
+DISABLE_UNUSED_WARNING
 typedef U64 ArenaFlags;
 enum
 {
@@ -88,5 +90,6 @@ internal void temp_end(Temp temp);
 #define push_array_aligned(a, T, c, align) (T *)arena_push((a), sizeof(T)*(c), (align), (1))
 #define push_array_no_zero(a, T, c) push_array_no_zero_aligned(a, T, c, Max(8, AlignOf(T)))
 #define push_array(a, T, c) push_array_aligned(a, T, c, Max(8, AlignOf(T)))
+ENABLE_UNUSED_WARNING
 
 #endif // BASE_ARENA_H
