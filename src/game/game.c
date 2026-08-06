@@ -50,10 +50,10 @@ SOC_EXPORT void soc_GameMemoryInit(soc_GameMemory* memory)
 
     memory->menuState = MenuState_Title;
 
-// #if 1
-//     memory->menuState = MenuState_GameOver;
-//     memory->levelTimer = 0.1f;
-// #endif
+#if 1
+    memory->menuState = MenuState_GameOver;
+    memory->levelTimer = 0.1f;
+#endif
 
     BSD_INF("Game memory initialised!");
 }

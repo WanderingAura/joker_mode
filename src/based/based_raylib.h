@@ -19,3 +19,4 @@ typedef struct {
 Color PeriodicFade_(Color c, PeriodicFadeParams params);
 void DrawHCentreText(const char* text, f32 y, f32 fontSize, f32 lowX, f32 highX, Color color);
 void DrawHCentreScreenText(const char* text, f32 y, f32 fontSize, Color color);
+f32 CalculateCentredPosition(f32 low, f32 high, f32 size);

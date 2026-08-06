@@ -13,6 +13,8 @@
 #define HISCORE_SERVER_ENDPOINT "/hiscores"
 
 #define BG_COLOR BLACK
+#define MAX_INPUT_CHARS 10
+#define MAX_USERNAME_PLACEHOLDER "__________"
 
 typedef struct
 {
@@ -273,15 +275,17 @@ void GameoverScreenNoScores(GameoverData* data)
     EndDrawing();
 }
 
-#define MAX_INPUT_CHARS 10
-void GameoverInputScore(GameoverData* data)
+void DrawUsernameTextbox(GameoverData* data)
 {
     Scoreboard* scoreboard = &data->scoreboard;
     static int framesCounter = 0;
     int key = GetCharPressed();
     char* name = scoreboard->userScore.username;
     int screenWidth = GetScreenWidth();
-    Rectangle textBox = { screenWidth/2.0f - 100, 380, 225, 50 };
+    int textboxWidth = MeasureText(MAX_USERNAME_PLACEHOLDER, 40);
+
+    f32 textboxPosX = CalculateCentredPosition(0, screenWidth, textboxWidth);
+    Rectangle textBox = { textboxPosX, 380, textboxWidth, 50 };
 
     while (key > 0)
     {
@@ -300,25 +304,68 @@ void GameoverInputScore(GameoverData* data)
         if (data->usernameLen < 0) data->usernameLen = 0;
         name[data->usernameLen] = 0;
     }
+    DrawRectangleRec(textBox, LIGHTGRAY);
+    DrawRectangleLines((int)textBox.x, (int)textBox.y, (int)textBox.width, (int)textBox.height, RED);
+    DrawText(name, (int)textBox.x + 5, (int)textBox.y + 8, 40, MAROON);
+    if (data->usernameLen < MAX_INPUT_CHARS)
+    {
+        if (((framesCounter/20)%2) == 0)
+            DrawText("_", (int)textBox.x + 8 + MeasureText(name, 40), (int)textBox.y + 12, 40, MAROON);
+    }
+}
+
+bool AlphaNumeric(char c)
+{
+    return ('0' <= c && c <= '9')
+        || ('a' <= c && c <= 'z')
+        || ('A' <= c && c <= 'Z');
+}
+
+bool ValidateUsername(char username[USERNAME_MAX_LEN])
+{
+    for (int i = 0; i < USERNAME_MAX_LEN; i++)
+    {
+        char c = username[i];
+        if (c == 0)
+        {
+            // at least 3 chars long
+            return i >= 3;
+        }
+
+        if (!AlphaNumeric(c))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+void GameoverInputScore(GameoverData* data)
+{
+    static bool displayValidationFailMsg = false;
     if (IsKeyPressed(KEY_ENTER))
     {
-        // username should already be in the userScore struct
-        scoreboard->userScore.score = (int)(core_GameMemoryGet()->levelTimer * 100.0f);
-        data->state = GameoverState_LoadingScore;
+        if (ValidateUsername(data->scoreboard.userScore.username))
+        {
+            // username should already be in the userScore struct
+            data->scoreboard.userScore.score = (int)(core_GameMemoryGet()->levelTimer * 100.0f);
+            data->state = GameoverState_LoadingScore;
+        }
+        else
+        {
+            displayValidationFailMsg = true;
+        }
     }
 
     BeginDrawing();
         ClearBackground(BG_COLOR);
 
         DrawGameOverText(200);
-        DrawHCentreScreenText("Enter your username to record your score!", 320, 20, RAYWHITE);
-        DrawRectangleRec(textBox, LIGHTGRAY);
-        DrawRectangleLines((int)textBox.x, (int)textBox.y, (int)textBox.width, (int)textBox.height, RED);
-        DrawText(name, (int)textBox.x + 5, (int)textBox.y + 8, 40, MAROON);
-        if (data->usernameLen < MAX_INPUT_CHARS)
+        DrawHCentreScreenText("Enter your username to record your score!", 320, FONT_BODY_SIZE, RAYWHITE);
+        DrawUsernameTextbox(data);
+        if (displayValidationFailMsg)
         {
-            // Draw blinking underscore char
-            if (((framesCounter/20)%2) == 0) DrawText("_", (int)textBox.x + 8 + MeasureText(name, 40), (int)textBox.y + 12, 40, MAROON);
+            DrawHCentreScreenText("Username needs to be alphanumeric and at least 3 characters!", 450, FONT_BODY_SIZE, RED);
         }
     EndDrawing();
 }

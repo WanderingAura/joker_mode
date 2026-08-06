@@ -9,6 +9,7 @@
 #include "render_font_types.h"
 #include "bullet.h"
 
+#define USERNAME_MAX_LEN 16
 typedef struct
 {
     efs_Entity projectile[ProjectileTypeCount];
@@ -23,7 +24,7 @@ typedef struct
 
 typedef struct
 {
-    char username[16];
+    char username[USERNAME_MAX_LEN];
     u32 score;
 } ScoreInfo;
 
