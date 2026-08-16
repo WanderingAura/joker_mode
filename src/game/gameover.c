@@ -2,6 +2,8 @@
 #include <math.h>
 #include "based_raylib.h"
 #include "based_basic.h"
+#include "core_menu_state.h"
+#include "state_transition.h"
 #include "http.h"
 #include "core_game_memory.h"
 #include "raylib.h"
@@ -26,6 +28,11 @@ typedef struct
 static bool IsDigit(char c)
 {
     return c >= '0' && c <= '9';
+}
+
+void InitGameOver(soc_GameMemory* memory)
+{
+    memory->gameoverData.state = GameoverState_InputScore;
 }
 
 s32 ParseScoresLine(ScoreInfo* info, char* buf, u32 len)
@@ -243,7 +250,7 @@ void GameoverShowScores(GameoverData* data)
     int key = GetKeyPressed();
     if (key != 0)
     {
-        core_GameMemoryGet()->menuState = MenuState_Title;
+        TransitionToState(core_GameMemoryGet(), MenuState_Title);
     }
 
     BeginDrawing();
@@ -262,7 +269,7 @@ void GameoverScreenNoScores(GameoverData* data)
     int key = GetKeyPressed();
     if (key != 0)
     {
-        core_GameMemoryGet()->menuState = MenuState_Title;
+        TransitionToState(core_GameMemoryGet(), MenuState_Title);
     }
     BeginDrawing();
         ClearBackground(BG_COLOR);

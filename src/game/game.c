@@ -6,8 +6,10 @@
 #include "based_logging.h"
 #include "core_game_memory.h"
 #include "core_entity_template.h"
+#include "core_menu_state.h"
 #include "core_texture.h"
 #include "render_font.h"
+#include "state_transition.h"
 #include "test_screen.h"
 #include "demo_level.h"
 #include "title_screen.h"
@@ -48,9 +50,9 @@ SOC_EXPORT void soc_GameMemoryInit(soc_GameMemory* memory)
     memory->camera = (Camera2D){0};
     memory->gameoverData.usernameLen = 0;
 
-    memory->menuState = MenuState_Title;
+    TransitionToState(memory, MenuState_Title);
 
-#if 1
+#if 0
     memory->menuState = MenuState_GameOver;
     memory->levelTimer = 0.1f;
 #endif

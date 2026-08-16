@@ -5,6 +5,7 @@ joker_target_link_raylib(soc)
 
 target_sources(soc PRIVATE
     core_game_memory.c
+    state_transition.c
     game.c
     title_screen.c
     test_screen.c

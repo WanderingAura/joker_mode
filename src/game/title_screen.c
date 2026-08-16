@@ -2,6 +2,7 @@
 #include "core_game_memory.h"
 #include "based_raylib.h"
 #include "raylib.h"
+#include "state_transition.h"
 #include "test_screen.h"
 #include "ui_config.h"
 
@@ -10,8 +11,7 @@ void TitleScreenUpdate(soc_GameMemory* memory)
     int key = GetKeyPressed();
     if (key != 0)
     {
-        memory->menuState = MenuState_BulletHellTest;
-        InitBulletHellTest(memory);
+        TransitionToState(memory, MenuState_BulletHellTest);
     }
 
     Font* fonts = memory->fonts;

@@ -1,5 +1,7 @@
 #include "bullet.h"
 #include "core_game_memory.h"
+#include "core_menu_state.h"
+#include "state_transition.h"
 #include "demo_level.h"
 #include "based_raylib.h"
 
@@ -14,8 +16,7 @@ void BulletHellUpdate(soc_GameMemory* memory)
     int key = GetKeyPressed();
     if (key == KEY_SPACE)
     {
-        memory->menuState = MenuState_MainGame;
-        InitDemoLevel(memory);
+        TransitionToState(memory, MenuState_MainGame);
     }
     if (key == KEY_R)
     {

@@ -1,3 +1,5 @@
+#include "core_menu_state.h"
+#include "state_transition.h"
 #include "efs_entity.h"
 #include "core_game_memory.h"
 #include "core_entity_template.h"
@@ -172,8 +174,7 @@ void MainGameUpdate(soc_GameMemory* memory)
 
     if (memory->player && memory->player->health <= 0)
     {
-        memory->menuState = MenuState_GameOver;
-        memory->gameoverData.state = GameoverState_InputScore;
+        TransitionToState(memory, MenuState_GameOver);
     }
     memory->camera.target = memory->player->pos;
     BeginDrawing();

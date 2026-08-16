@@ -43,4 +43,7 @@
 
 - [x] make a test screen to test out a reworked bullet type that follows parametric equations
 
-- [ ] sort out all the dummy warnings caused by dumping raddbg base layer code into the codebase
+- [x] sort out all the dummy warnings caused by dumping raddbg base layer code into the codebase
+
+- [ ] add feedback for getting hit (e.g. red tint on player + camera shake)
+- [ ] refactor the entity system to incorporate the new bullets
