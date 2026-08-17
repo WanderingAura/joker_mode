@@ -26,8 +26,14 @@ Prerequisites:
 - Visual Studio (or build tools for MSVC that CMake can detect)
 - Windows SDK (Usually installed with Visual Studio)
 
-Please execute the following script within the Developer Command Prompt on Windows Terminal, or any other terminal environment which
-has nmake and cl.exe available.
+If you have visual studio installed, you can enter the dev environment by executing the following script:
+
+```
+enter_dev.bat
+```
+
+After entering the windows dev env with the above script or using another method (any terminal with the msvc dev environment sourced should be okay), you can use the following build script:
+
 ```
 build.bat <debug|release>
 ```

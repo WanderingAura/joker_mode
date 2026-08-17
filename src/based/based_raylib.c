@@ -39,5 +39,5 @@ void DrawHCentreText(const char* text, f32 y, f32 fontSize, f32 lowX, f32 highX,
 
 void DrawHCentreScreenText(const char* text, f32 y, f32 fontSize, Color color)
 {
-    return DrawHCentreText(text, y, fontSize, 0, GetScreenWidth(), color);
+    DrawHCentreText(text, y, fontSize, 0, GetScreenWidth(), color);
 }

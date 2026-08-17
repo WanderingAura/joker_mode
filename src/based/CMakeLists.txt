@@ -8,7 +8,10 @@ joker_add_lib(based STATIC
 )
 
 joker_target_link_raylib(based)
-target_compile_options(based PRIVATE -fPIC)
+
+if (!MSVC)
+    target_compile_options(based PRIVATE -fPIC)
+endif()
 
 target_include_directories(based
     PUBLIC
