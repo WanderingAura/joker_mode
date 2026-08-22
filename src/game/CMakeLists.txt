@@ -1,7 +1,7 @@
 include(TargetCreationFuncs)
 
-# on Android soc can't be its own standalone .so (same reasoning as raylib, see
-# FindJokerLibraries.cmake) -- dlopen-based hot reload isn't available there anyway
+# building statically on android is simpler and doesn't cost anything
+# because we can't hot reload anyway
 if (${PLATFORM} STREQUAL "Android")
     joker_add_lib(soc STATIC)
 else()
@@ -30,3 +30,9 @@ target_link_libraries(game_api INTERFACE
     level_interface
     render_interface
 )
+
+if (${PLATFORM} STREQUAL "Android")
+    target_compile_definitions(game_api INTERFACE
+        GAME_PLATFORM_ANDROID
+    )
+endif()

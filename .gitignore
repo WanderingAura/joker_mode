@@ -1,4 +1,10 @@
 build/
+dist/
+android_packaging/build/
+android_packaging/apk_assets/
+android_packaging/*.keystore
+android_packaging/*.apk
+android_packaging/*.idsig
 .cache/
 .vscode/
 .vs/
