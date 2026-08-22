@@ -1,6 +1,12 @@
 include(TargetCreationFuncs)
 
-joker_add_lib(soc SHARED)
+# on Android soc can't be its own standalone .so (same reasoning as raylib, see
+# FindJokerLibraries.cmake) -- dlopen-based hot reload isn't available there anyway
+if (${PLATFORM} STREQUAL "Android")
+    joker_add_lib(soc STATIC)
+else()
+    joker_add_lib(soc SHARED)
+endif()
 joker_target_link_raylib(soc)
 
 target_sources(soc PRIVATE

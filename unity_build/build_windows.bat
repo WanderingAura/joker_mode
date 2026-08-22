@@ -33,8 +33,8 @@ for %%a in ("%SRC_DIR%") do set "SRC_DIR=%%~fa"
   for /r "%SRC_DIR%" %%f in (*.c) do (
     set "name=%%~nxf"
 
-    REM Exclude main.c
-    if /i not "!name!"=="main.c" (
+    REM Exclude main*.c
+    if /i not "!name:~0,4!"=="main" (
 
       REM Exclude *_linux.c
       echo "!name!" | findstr /i "_linux" >nul

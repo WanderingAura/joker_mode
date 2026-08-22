@@ -60,7 +60,7 @@ typedef s64 b64;
         } \
     } while (0)
 #else
-#define DBG_ASSERT_MSG(cond, msg)
+#define DBG_ASSERT_MSG(cond, msg, ...)
 #endif
 
 bool bsd_IsDigit(char c);

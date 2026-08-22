@@ -1,6 +1,9 @@
 include_guard(GLOBAL)
 
-set(BUILD_SHARED_LIBS ON CACHE BOOL "Build raylib as shared library" FORCE)
+# raylib has part of the bootstrapping code on Android (it needs to be static) so we can only build it as shared on other platforms.
+if (NOT ${PLATFORM} STREQUAL "Android")
+  set(BUILD_SHARED_LIBS ON CACHE BOOL "Build raylib as shared library" FORCE)
+endif()
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
   if (DEFINED ENV{WAYLAND_DISPLAY})
     set(GLFW_BUILD_WAYLAND ON CACHE BOOL "build raylib with wayland" FORCE)

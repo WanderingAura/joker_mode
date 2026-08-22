@@ -3,7 +3,6 @@
 #include "vos.h"
 #include "vos_socket.h"
 #include <assert.h>
-#include <stdio.h>
 
 #include "based_logging.h"
 

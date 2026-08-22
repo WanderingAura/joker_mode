@@ -22,6 +22,16 @@
       }
     },
     {
+      "name": "base-android",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "PLATFORM": "Android",
+        "CMAKE_TOOLCHAIN_FILE": "$env{ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake",
+        "ANDROID_ABI": "arm64-v8a",
+        "ANDROID_PLATFORM": "android-24"
+      }
+    },
+    {
       "name": "debug",
       "inherits": "base",
       "cacheVariables": {
@@ -58,6 +68,20 @@
       }
     },
     {
+      "name": "debug-android",
+      "inherits": "base-android",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "release-android",
+      "inherits": "base-android",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
       "name": "compile_commands",
       "inherits": "debug",
       "generator": "Ninja",
@@ -86,6 +110,14 @@
     {
       "name": "release-web",
       "configurePreset": "release-web"
+    },
+    {
+      "name": "debug-android",
+      "configurePreset": "debug-android"
+    },
+    {
+      "name": "release-android",
+      "configurePreset": "release-android"
     }
   ],
   "workflowPresets": [
@@ -138,6 +170,19 @@
         {
           "type": "build",
           "name": "release-web"
+        }
+      ]
+    },
+    {
+      "name": "release-android",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "release-android"
+        },
+        {
+          "type": "build",
+          "name": "release-android"
         }
       ]
     }
