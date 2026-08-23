@@ -1,5 +1,6 @@
 #include <string.h>
 #include <math.h>
+#include "input.h"
 #include "based_raylib.h"
 #include "based_basic.h"
 #include "core_menu_state.h"
@@ -247,8 +248,7 @@ void DrawScoreBoard(const Scoreboard* scoreboard, Vector2 topleft)
 
 void GameoverShowScores(GameoverData* data)
 {
-    int key = GetKeyPressed();
-    if (key != 0)
+    if (IsButtonsPressed(AnyButton))
     {
         TransitionToState(core_GameMemoryGet(), MenuState_Title);
     }
@@ -266,8 +266,7 @@ void GameoverShowScores(GameoverData* data)
 void GameoverScreenNoScores(GameoverData* data)
 {
     Scoreboard* scoreboard = &data->scoreboard;
-    int key = GetKeyPressed();
-    if (key != 0)
+    if (IsButtonsPressed(AnyButton))
     {
         TransitionToState(core_GameMemoryGet(), MenuState_Title);
     }
@@ -305,7 +304,7 @@ void DrawUsernameTextbox(GameoverData* data)
         key = GetCharPressed();
     }
 
-    if (IsKeyPressed(KEY_BACKSPACE))
+    if (IsButtonsPressed(RemoveCharButton))
     {
         data->usernameLen--;
         if (data->usernameLen < 0) data->usernameLen = 0;
@@ -350,7 +349,7 @@ bool ValidateUsername(char username[USERNAME_MAX_LEN])
 void GameoverInputScore(GameoverData* data)
 {
     static bool displayValidationFailMsg = false;
-    if (IsKeyPressed(KEY_ENTER))
+    if (IsButtonsPressed(ConfirmButton))
     {
         if (ValidateUsername(data->scoreboard.userScore.username))
         {

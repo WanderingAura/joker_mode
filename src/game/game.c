@@ -14,6 +14,7 @@
 #include "demo_level.h"
 #include "title_screen.h"
 #include "gameover.h"
+#include "input.h"
 
 #if defined(__linux__)
   #define SOC_EXPORT
@@ -32,7 +33,7 @@ SOC_EXPORT void soc_GameModuleInit(soc_GameMemory* memory)
     // efs_Entity proj = ProjectileEntityCreate(ProjectileNormal, (Vector2){(float)GetScreenWidth() / 2.0f,(float)GetScreenHeight()/ 2.0f}, (Vector2){1.0f, 0.0f});
     // efs_PoolAdd(memory->efs_entityPool, proj);
 
-
+    InitialiseInputs();
 }
 
 SOC_EXPORT void soc_GameMemoryInit(soc_GameMemory* memory)
@@ -62,6 +63,8 @@ SOC_EXPORT void soc_GameMemoryInit(soc_GameMemory* memory)
 
 SOC_EXPORT void soc_GameUpdate(soc_GameMemory* memory)
 {
+    UpdateInputs();
+
     switch (memory->menuState)
     {
         case MenuState_Title:

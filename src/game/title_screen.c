@@ -4,12 +4,12 @@
 #include "raylib.h"
 #include "state_transition.h"
 #include "test_screen.h"
+#include "input.h"
 #include "ui_config.h"
 
 void TitleScreenUpdate(soc_GameMemory* memory)
 {
-    int key = GetKeyPressed();
-    if (key != 0)
+    if (IsButtonsPressed(AnyButton))
     {
         TransitionToState(memory, MenuState_BulletHellTest);
     }

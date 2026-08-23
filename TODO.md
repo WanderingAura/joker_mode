@@ -47,3 +47,4 @@
 
 - [ ] add feedback for getting hit (e.g. red tint on player + camera shake)
 - [ ] refactor the entity system to incorporate the new bullets
+- [ ] add another layer to the input system that translates the input state into player intent

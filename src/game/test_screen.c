@@ -3,6 +3,7 @@
 #include "core_menu_state.h"
 #include "state_transition.h"
 #include "demo_level.h"
+#include "input.h"
 #include "based_raylib.h"
 
 void InitBulletHellTest(soc_GameMemory* memory)
@@ -13,12 +14,11 @@ void InitBulletHellTest(soc_GameMemory* memory)
 void BulletHellUpdate(soc_GameMemory* memory)
 {
     static int frame_count = 0;
-    int key = GetKeyPressed();
-    if (key == KEY_SPACE)
+    if (IsButtonsPressed(NextButton))
     {
         TransitionToState(memory, MenuState_MainGame);
     }
-    if (key == KEY_R)
+    if (IsButtonsPressed(ResetButton))
     {
         InitBulletHellTest(memory); // restart the screen
     }

@@ -18,6 +18,7 @@
 #include "render_font.h"
 #include "lvl_collision.h"
 #include "core_wall.h"
+#include "input.h"
 
 #include "prop_behaviours.h"
 #include "efs_entity.h"
@@ -56,36 +57,24 @@ void MoveAndResolveCollisions(efs_Entity* player, efs_EntityPool* pool)
     }
 }
 
+bool AbleToDodge(efs_Entity* entity)
+{
+    return IsButtonsPressed(DodgeButton) &&
+        entity->dodgeCooldown <= 0 &&
+        Vector2LengthSqr(entity->dir) != 0;
+}
+
 int handle_playerControlled(efs_Entity* entity, soc_GameMemory* memory) {
     if(efs_EntityHasProperty(entity, efs_prop_PlayerControlled)) {
         if(entity->dodgeTimer >= 0) {
             //prevent move while in roll
             return 0;
         }
-        bool isDodge = false;
-        if(IsKeyDown(KEY_LEFT_SHIFT) && entity->dodgeCooldown <= 0) {
-            isDodge = true;
-        }
-        entity->dir.x = 0.0f;
-        entity->dir.y = 0.0f;
-        if(IsKeyDown(KEY_W)) {
-            entity->dir.y -= 1.0f;
-        };
-        if(IsKeyDown(KEY_S)) {
-            entity->dir.y += 1.0f;
-        }
-        if(IsKeyDown(KEY_A)) {
-            entity->dir.x -= 1.0f;
-        }
-        if(IsKeyDown(KEY_D)) {
-            entity->dir.x += 1.0f;
-        }
-        if(isDodge && (entity->dir.x != 0 || entity->dir.y != 0 ) && entity->dodgeCooldown <= 0) {
-            entity->dodgeDirection = Vector2Normalize(entity->dir);
+        entity->dir = GetInputDir();
+        if(AbleToDodge(entity)) {
+            entity->dodgeDirection = entity->dir;
             entity->dodgeTimer = DODGE_DURATION;
-            
         } else {
-            entity->dir = Vector2Normalize(entity->dir);
             MoveAndResolveCollisions(entity, &memory->efs_entityPool);
         }
     }

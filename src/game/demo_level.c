@@ -1,4 +1,5 @@
 #include "core_menu_state.h"
+#include "input.h"
 #include "state_transition.h"
 #include "efs_entity.h"
 #include "core_game_memory.h"
@@ -190,6 +191,8 @@ void MainGameUpdate(soc_GameMemory* memory)
 
         DrawText(TextFormat("Player Health: %d", memory->player->health), 10, 10, 20, RED);
         DrawText(TextFormat("Time survived: %.1f", memory->levelTimer), 10, 40, 20, GREEN);
+
+        DrawJoystick();
 
         DrawFPS((float)GetScreenWidth()-20, 0);
     }
