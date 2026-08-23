@@ -68,6 +68,28 @@ cmake -DCMAKE_BUILD_TYPE=Debug ..
 cmake --build .
 ```
 
+# Building for Android
+
+Prerequisites:
+- CMake
+- Android NDK (set `ANDROID_NDK_HOME` to its location)
+- Android SDK build-tools + a platform (for `aapt2`, `zipalign`, `apksigner`) and a JDK (for `keytool`)
+
+```
+build.sh release-android
+```
+
+This produces `dist/libsociety.so`. To package it into an installable APK:
+
+```
+cd android_packaging
+./package_apk.sh
+```
+
+This signs with a debug keystore (generated on first run) and outputs `android_packaging/society-debug.apk`, installable via `adb install -r android_packaging/society-debug.apk`.
+
+Note: hot reloading isn't available on Android, since the game code is statically linked into the same .so as the entry point.
+
 # Hot reloading
 As long as the data structures have not changed, hot reloading should work by executing the build commands while the
 program is running. Try it by looking for the title screen text and changing it, saving and compiling while the game is still running!
