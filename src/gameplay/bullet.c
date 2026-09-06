@@ -77,28 +77,12 @@ Vector2 calc_pos_from_patterns(MovementInfo* infos_x, MovementInfo* infos_y, Vec
         current_pos.x += val_from_pattern(&info_x, t);
         current_pos.y += val_from_pattern(&info_y, t);
     }
-    
+
     // rotate and offset the final pattern
     current_pos = Vector2Rotate(current_pos, rotation);
     current_pos = Vector2Add(current_pos, init_pos);
 
     return current_pos;
-}
-
-Vector2 entity_pos(Entity* entity)
-{
-    switch (entity->type)
-    {
-        case EntityType_Bullet:
-        {
-            return entity->bullet.pos;
-        } break;
-        default:
-        {
-            BSD_CRIT("Unknown entity");
-            break;
-        }
-    }
 }
 
 Vector2 vel_from_target(TargetType type, Vector2 target, Vector2 pos, f32 speed, Vector2 cur_vel)
@@ -123,7 +107,7 @@ Vector2 vel_from_target(TargetType type, Vector2 target, Vector2 pos, f32 speed,
     return result;
 }
 
-void bullet_update(Bullet* bullet)
+void bullet_update(efs_Entity* bullet)
 {
     f32 t = GetFrameTime();
     bullet->time_since_spawn += t * bullet->parametric_speed;
@@ -135,7 +119,7 @@ void bullet_update(Bullet* bullet)
     }
     else if (bullet->move_type == MovementType_Velocity)
     {
-        Vector2 target_pos = entity_pos(bullet->target);
+        Vector2 target_pos = bullet->target->pos;
         bullet->vel = vel_from_target(bullet->targeting_type, target_pos, bullet->pos, bullet->parametric_speed, bullet->vel);
         bullet->pos = Vector2Add(bullet->pos, Vector2Scale(bullet->vel, t));
     }
@@ -145,79 +129,9 @@ void bullet_update(Bullet* bullet)
     }
 }
 
-void bullet_draw(Bullet* bullet)
+void bullet_draw(efs_Entity* bullet)
 {
-    DrawCircle(bullet->x, bullet->y, bullet->radius, bullet->color);
-}
-
-void bullet_list_init(Bullet* sentinel)
-{
-    sentinel->next = sentinel;
-    sentinel->prev = sentinel;
-}
-
-bool bullet_list_is_empty(const Bullet* sentinel)
-{
-    return sentinel->next == sentinel;
-}
-
-// Inserts `node` immediately before `position` (position may be the sentinel
-// itself, which inserts at the back of the list).
-void bullet_list_insert_before(Bullet* position, Bullet* node)
-{
-    node->prev = position->prev;
-    node->next = position;
-    position->prev->next = node;
-    position->prev = node;
-}
-
-void bullet_list_push_back(Bullet* sentinel, Bullet* node)
-{
-    bullet_list_insert_before(sentinel, node);
-}
-
-void bullet_list_push_front(Bullet* sentinel, Bullet* node)
-{
-    bullet_list_insert_before(sentinel->next, node);
-}
-
-// Unlinks `node` from whatever list it's currently in. `node` must be
-// re-inserted into a list before its next/prev fields are used again.
-void bullet_list_remove(Bullet* node)
-{
-    node->prev->next = node->next;
-    node->next->prev = node->prev;
-}
-
-void bullet_pool_init(BulletPool* pool)
-{
-    bullet_list_init(&pool->free_list);
-    bullet_list_init(&pool->active_list);
-
-    for (u32 i = 0; i < BULLET_POOL_SIZE; i++)
-    {
-        bullet_list_push_back(&pool->free_list, &pool->storage[i]);
-    }
-}
-
-// Returns NULL if the pool is exhausted.
-Bullet* bullet_pool_alloc(BulletPool* pool)
-{
-    if (bullet_list_is_empty(&pool->free_list))
-    {
-        return NULL;
-    }
-
-    Bullet* bullet = pool->free_list.next;
-    bullet_list_remove(bullet);
-    bullet_list_push_back(&pool->active_list, bullet);
-    return bullet;
-}
-
-void bullet_pool_free(BulletPool* pool, Bullet* bullet)
-{
-    bullet_list_remove(bullet);
-    bullet_list_push_back(&pool->free_list, bullet);
+    DrawCircle(bullet->pos.x, bullet->pos.y, bullet->radius, bullet->color);
 }
 
 MovementInfo movement_linear(f32 speed)
@@ -254,38 +168,33 @@ MovementInfo movement_constant(f32 value)
     return info;
 }
 
-// Shared setup for freshly-allocated bullets: resets every field a spawner would
-// otherwise need to clear itself, without touching next/prev (bullet_pool_alloc has
-// already spliced `bullet` into the pool's active list).
-void bullet_init_common(Bullet* bullet, Vector2 pos, f32 radius, Color color)
+// Shared setup for a freshly-allocated (efs_PoolAlloc'd, already zeroed) entity: sets the
+// fields a spawner would otherwise need to fill in itself, and marks the entity for
+// per-frame parametric updates via handle_parametricMovement.
+void bullet_init_common(efs_Entity* bullet, Vector2 pos, f32 radius, Color color)
 {
     bullet->pos = pos;
     bullet->init_pos = pos;
-    bullet->vel = (Vector2){0};
     bullet->radius = radius;
-    bullet->time_since_spawn = 0.0f;
-    bullet->rotation = 0.0f;
     bullet->color = color;
     bullet->move_type = MovementType_Parametric;
-
-    MemoryZeroArray(bullet->move_info_x);
-    MemoryZeroArray(bullet->move_info_y);
 
     bullet->parametric_speed = 1.0f;
     bullet->speed_info = movement_constant(1.0f);
 
-    bullet->target = NULL;
     bullet->targeting_type = TargetType_Direct;
+
+    efs_EntitySetProperty(bullet, efs_prop_ParametricMovement);
 }
 
 // A set of `count` bullets that all share one local trajectory - a straight line along
 // local +x at `speed` - and are fanned out into evenly spaced directions purely via
 // `rotation`. Classic N-way radial burst from a single point.
-void bullet_spawn_linear_spew(BulletPool* pool, Vector2 origin, u32 count, f32 speed, f32 radius, Color color)
+void bullet_spawn_linear_spew(efs_EntityPool* pool, Vector2 origin, u32 count, f32 speed, f32 radius, Color color)
 {
     for (u32 i = 0; i < count; i++)
     {
-        Bullet* bullet = bullet_pool_alloc(pool);
+        efs_Entity* bullet = efs_PoolAlloc(pool);
         if (bullet == NULL)
         {
             break;
@@ -304,11 +213,11 @@ void bullet_spawn_linear_spew(BulletPool* pool, Vector2 origin, u32 count, f32 s
 // amp*sin), produce circular motion around `target`, and the shared decay envelope shrinks
 // that circle's radius linearly to 0 by `collapse_duration`, so every bullet spirals inward
 // and lands exactly on `target`.
-void bullet_spawn_inward_spiral(BulletPool* pool, Vector2 target, u32 count, f32 orbit_radius, f32 orbit_freq, f32 collapse_duration, f32 radius, Color color)
+void bullet_spawn_inward_spiral(efs_EntityPool* pool, Vector2 target, u32 count, f32 orbit_radius, f32 orbit_freq, f32 collapse_duration, f32 radius, Color color)
 {
     for (u32 i = 0; i < count; i++)
     {
-        Bullet* bullet = bullet_pool_alloc(pool);
+        efs_Entity* bullet = efs_PoolAlloc(pool);
         if (bullet == NULL)
         {
             break;

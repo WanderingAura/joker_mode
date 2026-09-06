@@ -10,6 +10,7 @@ target_sources(behaviours PRIVATE
     haslifetime.c
     hasrotation.c
     movesbetweentwopoints.c
+    parametricmovement.c
     playercontrolled.c
     prop_behaviours.h
     scaleswithdifficulty.c

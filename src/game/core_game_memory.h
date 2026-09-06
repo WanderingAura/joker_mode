@@ -7,7 +7,6 @@
 #include "core_entity_types.h"
 #include "core_menu_state.h"
 #include "render_font_types.h"
-#include "bullet.h"
 
 #define USERNAME_MAX_LEN 16
 typedef struct
@@ -64,7 +63,6 @@ typedef struct {
     GameMenuState menuState;
 
     GameoverData gameoverData;
-    BulletPool bullet_pool;
 } soc_GameMemory;
 
 soc_GameMemory* core_GameMemoryGet();

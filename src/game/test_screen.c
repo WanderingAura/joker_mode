@@ -5,10 +5,12 @@
 #include "demo_level.h"
 #include "input.h"
 #include "based_raylib.h"
+#include "efs_entity.h"
+#include "prop_behaviours.h"
 
 void InitBulletHellTest(soc_GameMemory* memory)
 {
-    bullet_pool_init(&memory->bullet_pool);
+    efs_PoolInit(&memory->efs_entityPool);
 }
 
 void BulletHellUpdate(soc_GameMemory* memory)
@@ -25,12 +27,12 @@ void BulletHellUpdate(soc_GameMemory* memory)
 
     if (frame_count % (2*60) == 0)
     {
-        bullet_spawn_linear_spew(&memory->bullet_pool, (Vector2){400,300}, 20, 60.0f, 2.0f, RED);
+        bullet_spawn_linear_spew(&memory->efs_entityPool, (Vector2){400,300}, 20, 60.0f, 2.0f, RED);
     }
 
     if (frame_count % (3*60) == 0)
     {
-        bullet_spawn_inward_spiral(&memory->bullet_pool, (Vector2){600,300}, 2, 200, 10, 10, 3, GREEN);
+        bullet_spawn_inward_spiral(&memory->efs_entityPool, (Vector2){600,300}, 2, 200, 10, 10, 3, GREEN);
     }
 
     BeginDrawing();
@@ -38,9 +40,9 @@ void BulletHellUpdate(soc_GameMemory* memory)
         Color flashingBlue = PeriodicFade(SKYBLUE);
         DrawText("PRESS SPACE TO EXIT TEST SCREEN", 250, 500, 20, flashingBlue);
 
-        bullet_list_for_each(&memory->bullet_pool.active_list, b)
+        efs_entity_list_for_each(&memory->efs_entityPool.active_list, b)
         {
-            bullet_update(b);
+            handle_parametricMovement(b);
             bullet_draw(b);
         }
         DrawFPS(10, 10);

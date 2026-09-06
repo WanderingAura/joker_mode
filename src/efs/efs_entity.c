@@ -38,7 +38,8 @@ void efs_entity_list_remove(efs_Entity* node) {
     node->next->prev = node->prev;
 }
 
-efs_Entity* efs_PoolAdd(efs_EntityPool* entityPool, efs_Entity entity) {
+// Unlinks and returns a node from the free list, or NULL if the pool is exhausted.
+static efs_Entity* efs_PoolTakeFree(efs_EntityPool* entityPool) {
     if (efs_entity_list_is_empty(&entityPool->free_list)) {
         printf("Pools closed due to aids, infected line: %d\n", __LINE__);
         //ran out of space
@@ -47,8 +48,28 @@ efs_Entity* efs_PoolAdd(efs_EntityPool* entityPool, efs_Entity entity) {
 
     efs_Entity* node = entityPool->free_list.next;
     efs_entity_list_remove(node);
+    return node;
+}
+
+efs_Entity* efs_PoolAdd(efs_EntityPool* entityPool, efs_Entity entity) {
+    efs_Entity* node = efs_PoolTakeFree(entityPool);
+    if (node == NULL) {
+        return NULL;
+    }
 
     *node = entity;
+    efs_entity_list_push_back(&entityPool->active_list, node);
+
+    return node;
+}
+
+efs_Entity* efs_PoolAlloc(efs_EntityPool* entityPool) {
+    efs_Entity* node = efs_PoolTakeFree(entityPool);
+    if (node == NULL) {
+        return NULL;
+    }
+
+    *node = (efs_Entity){ 0 };
     efs_entity_list_push_back(&entityPool->active_list, node);
 
     return node;

@@ -147,6 +147,7 @@ void MainGameUpdate(soc_GameMemory* memory)
             handle_playerControlled(entity, memory);
             handle_hasRotation(entity);
             handle_canMove(entity, memory);
+            handle_parametricMovement(entity);
             handle_solid(entity, player);
             handle_lifetime(entity, memory);
             handle_spawner(entity, memory);

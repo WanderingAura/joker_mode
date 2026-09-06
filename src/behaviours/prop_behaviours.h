@@ -29,6 +29,7 @@ int handle_canMove(efs_Entity* entity, soc_GameMemory* memory);
 int handle_despawnWhenFarFromPlayer(efs_Entity* entity, soc_GameMemory* memory, efs_Entity* player);
 int handle_lifetime(efs_Entity* entity, soc_GameMemory* memory);
 int handle_hasRotation(efs_Entity* entity);
+int handle_parametricMovement(efs_Entity* entity);
 int handle_playerControlled(efs_Entity* entity, soc_GameMemory* memory);
 int handle_shootAtMouse(efs_Entity* entity, soc_GameMemory* memory);
 int handle_solid(efs_Entity* entity, efs_Entity* player);
