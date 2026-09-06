@@ -32,10 +32,9 @@ void InitEntities(soc_GameMemory* memory)
 {
     //DEFINE guy
     efs_Entity guy = { 0 };
-    efs_EntitySetProperty(&guy, efs_prop_CanMove);
     efs_EntitySetProperty(&guy, efs_prop_PlayerControlled);
     efs_EntitySetProperty(&guy, efs_prop_HasHealth);
-    efs_EntitySetProperty(&guy, efs_prop_ShootsAtMouse);
+    efs_EntitySetProperty(&guy, efs_prop_ShootsAtTarget);
     efs_EntitySetProperty(&guy, efs_prop_CanDodge);
     guy.health = 10;
     guy.damageGroup = PlayerGroup;
@@ -135,11 +134,18 @@ void MainGameUpdate(soc_GameMemory* memory)
         spawner = ProjectileSpawnerCreate(SpawnerNormal, position, direction, spawnedInfo);
         efs_PoolAdd(&memory->efs_entityPool, spawner);
     }
+    if (frameCount % (60*4) == 0)
+    {
+        Vector2 position = {GetRandomValue(-50, 850), GetRandomValue(-50, 650)};
+        efs_Entity enemy = EnemyEntityCreate(EnemyChaser, position);
+        efs_PoolAdd(&memory->efs_entityPool, enemy);
+    }
     frameCount++;
     //Entity updates
     {
         efs_Entity* player = memory->player;
-        efs_entity_list_for_each_safe(&memory->efs_entityPool.active_list, entity, nextEntity) {
+        efs_entity_list_for_each_safe(&memory->efs_entityPool.active_list, entity, nextEntity)
+        {
             //using loop control so not in a function
             if(efs_EntityHasProperty(entity, efs_prop_HasHealth) && entity->health <= 0) {
                 continue;
@@ -147,11 +153,11 @@ void MainGameUpdate(soc_GameMemory* memory)
             handle_playerControlled(entity, memory);
             handle_hasRotation(entity);
             handle_canMove(entity, memory);
-            handle_parametricMovement(entity);
+            handle_parametricMovement(entity, memory);
             handle_solid(entity, player);
             handle_lifetime(entity, memory);
             handle_spawner(entity, memory);
-            handle_shootAtMouse(entity, memory);
+            handle_shootAtTarget(entity, memory);
             handle_canDamage(entity, memory);
             handle_tempInvincible(entity);
             handle_despawnWhenFarFromPlayer(entity, memory, player);

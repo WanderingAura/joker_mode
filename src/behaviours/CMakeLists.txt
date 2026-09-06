@@ -5,16 +5,14 @@ target_sources(behaviours PRIVATE
     canmove.c
     collidable.c
     despawnwhenfarfromplayer.c
-    followsother.c
     hashealth.c
     haslifetime.c
     hasrotation.c
-    movesbetweentwopoints.c
     parametricmovement.c
     playercontrolled.c
     prop_behaviours.h
     scaleswithdifficulty.c
-    shootsatmouse.c
+    shootsattarget.c
     solid.c
     spawner.c
     tempinvincible.c

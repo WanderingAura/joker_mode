@@ -107,20 +107,21 @@ Vector2 vel_from_target(TargetType type, Vector2 target, Vector2 pos, f32 speed,
     return result;
 }
 
-void bullet_update(efs_Entity* bullet)
+void bullet_update(efs_Entity* bullet, f32 speed_multiplier)
 {
     f32 t = GetFrameTime();
-    bullet->time_since_spawn += t * bullet->parametric_speed;
     if (bullet->move_type == MovementType_Parametric)
     {
-        bullet->parametric_speed = val_from_pattern(&bullet->speed_info, bullet->time_since_spawn);
+        bullet->parametric_speed = val_from_pattern(&bullet->speed_info, bullet->time_since_spawn) * speed_multiplier;
+        bullet->time_since_spawn += t * bullet->parametric_speed;
 
         bullet->pos = calc_pos_from_patterns(bullet->move_info_x, bullet->move_info_y, bullet->init_pos, bullet->time_since_spawn, bullet->rotation);
     }
     else if (bullet->move_type == MovementType_Velocity)
     {
         Vector2 target_pos = bullet->target->pos;
-        bullet->vel = vel_from_target(bullet->targeting_type, target_pos, bullet->pos, bullet->parametric_speed, bullet->vel);
+        f32 speed = bullet->parametric_speed * speed_multiplier;
+        bullet->vel = vel_from_target(bullet->targeting_type, target_pos, bullet->pos, speed, bullet->vel);
         bullet->pos = Vector2Add(bullet->pos, Vector2Scale(bullet->vel, t));
     }
     else
@@ -168,23 +169,46 @@ MovementInfo movement_constant(f32 value)
     return info;
 }
 
+f32 bullet_rotation_to(Vector2 from, Vector2 to)
+{
+    Vector2 delta = Vector2Subtract(to, from);
+    if (Vector2LengthSqr(delta) < 0.0001f)
+    {
+        return 0.0f;
+    }
+    return atan2f(delta.y, delta.x);
+}
+
+f32 bullet_rotation_of_dir(Vector2 dir)
+{
+    return bullet_rotation_to((Vector2){0}, dir);
+}
+
+// Anchors + aims an entity for parametric movement using whatever move_info_x/y pattern
+// it already carries - only `pos` and `rotation` vary per spawn. See bullet.h.
+void bullet_orient(efs_Entity* bullet, Vector2 pos, f32 rotation)
+{
+    bullet->pos = pos;
+    bullet->init_pos = pos;
+    bullet->rotation = rotation;
+    bullet->time_since_spawn = 0.0f;
+    bullet->move_type = MovementType_Parametric;
+    bullet->parametric_speed = 1.0f;
+    bullet->speed_info = movement_constant(1.0f);
+
+    efs_EntitySetProperty(bullet, efs_prop_ParametricMovement);
+}
+
 // Shared setup for a freshly-allocated (efs_PoolAlloc'd, already zeroed) entity: sets the
 // fields a spawner would otherwise need to fill in itself, and marks the entity for
 // per-frame parametric updates via handle_parametricMovement.
 void bullet_init_common(efs_Entity* bullet, Vector2 pos, f32 radius, Color color)
 {
-    bullet->pos = pos;
-    bullet->init_pos = pos;
     bullet->radius = radius;
     bullet->color = color;
-    bullet->move_type = MovementType_Parametric;
-
-    bullet->parametric_speed = 1.0f;
-    bullet->speed_info = movement_constant(1.0f);
-
     bullet->targeting_type = TargetType_Direct;
 
-    efs_EntitySetProperty(bullet, efs_prop_ParametricMovement);
+    bullet_orient(bullet, pos, bullet->rotation);
 }
 
 // A set of `count` bullets that all share one local trajectory - a straight line along
@@ -206,6 +230,22 @@ void bullet_spawn_linear_spew(efs_EntityPool* pool, Vector2 origin, u32 count, f
         bullet->move_info_x[0] = movement_linear(speed);
         bullet->move_info_y[0] = movement_linear(0.0f);
     }
+}
+
+// A single bullet fired from `origin` straight at `target_pos`, aimed once at spawn time.
+efs_Entity* bullet_spawn_aimed(efs_EntityPool* pool, Vector2 origin, Vector2 target_pos, f32 speed, f32 radius, Color color)
+{
+    efs_Entity* bullet = efs_PoolAlloc(pool);
+    if (bullet == NULL)
+    {
+        return NULL;
+    }
+
+    bullet_init_common(bullet, origin, radius, color);
+    bullet->rotation = bullet_rotation_to(origin, target_pos);
+    bullet->move_info_x[0] = movement_linear(speed);
+    bullet->move_info_y[0] = movement_linear(0.0f);
+    return bullet;
 }
 
 // A set of `count` bullets spawned on a ring of `orbit_radius` around `target`. Each bullet

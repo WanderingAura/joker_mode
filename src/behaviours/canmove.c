@@ -36,8 +36,7 @@ void EntityMove(efs_Entity* entity, float modifier)
 }
 
 int handle_canMove(efs_Entity* entity, soc_GameMemory* memory) {
-    // if not a player we update it normally
-    if(efs_EntityHasProperty(entity, efs_prop_CanMove) && !efs_EntityHasProperty(entity, efs_prop_PlayerControlled)) {
+    if(efs_EntityHasProperty(entity, efs_prop_CanMove)) {
         EntityMove(entity, memory->levelTimer/20.0f);
     }
     return 0;

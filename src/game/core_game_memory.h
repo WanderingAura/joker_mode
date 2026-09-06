@@ -13,6 +13,7 @@ typedef struct
 {
     efs_Entity projectile[ProjectileTypeCount];
     efs_Entity spawner[SpawnerTypeCount];
+    efs_Entity enemy[EnemyTypeCount];
 } EntityTemplateTables;
 
 typedef struct

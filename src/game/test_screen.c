@@ -42,7 +42,7 @@ void BulletHellUpdate(soc_GameMemory* memory)
 
         efs_entity_list_for_each(&memory->efs_entityPool.active_list, b)
         {
-            handle_parametricMovement(b);
+            handle_parametricMovement(b, memory);
             bullet_draw(b);
         }
         DrawFPS(10, 10);

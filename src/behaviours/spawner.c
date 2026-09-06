@@ -22,6 +22,7 @@
 #include "prop_behaviours.h"
 #include "efs_entity.h"
 #include "core_game_memory.h"
+#include "bullet.h"
 
 int handle_spawner(efs_Entity* entity, soc_GameMemory* memory) {
     if (efs_EntityHasProperty(entity, efs_prop_Spawner))
@@ -30,10 +31,11 @@ int handle_spawner(efs_Entity* entity, soc_GameMemory* memory) {
         if (entity->timeSinceLastSpawn >= entity->spawnTime)
         {
             entity->timeSinceLastSpawn = 0;
-            efs_Entity spawned = {0};
-            memcpy(&spawned, entity->childInfo.template, sizeof(efs_Entity));
-            spawned.dir = entity->childInfo.initialDir;
-            spawned.pos = Vector2Add(entity->pos, entity->childInfo.offset);
+            // stats (damage/lifetime/canDamage/texture/move pattern shape) come from the
+            // template; only where it spawns and which way it's aimed vary per shot.
+            efs_Entity spawned = *entity->childInfo.template;
+            Vector2 pos = Vector2Add(entity->pos, entity->childInfo.offset);
+            bullet_orient(&spawned, pos, bullet_rotation_of_dir(entity->childInfo.initialDir));
             efs_PoolAdd(&memory->efs_entityPool, spawned);
         }
     }

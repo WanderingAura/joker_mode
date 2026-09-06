@@ -19,6 +19,13 @@ typedef enum SpawnerType
     SpawnerTypeCount,
 } SpawnerType;
 
+typedef enum EnemyType
+{
+    EnemyChaser, // walks straight at the player and fires at them on cooldown
+
+    EnemyTypeCount,
+} EnemyType;
+
 typedef struct {
     efs_Entity* template;
     Vector2 offset;
