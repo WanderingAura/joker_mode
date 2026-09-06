@@ -121,6 +121,8 @@ void UpdateInputs()
     input_state.input_dir.x = (float)(IsButtonsPressedInternal(RightButton, new_buttons_pressed)
         - IsButtonsPressedInternal(LeftButton, new_buttons_pressed));
     
+    input_state.input_dir = Vector2Normalize(input_state.input_dir);
+    
     input_state.buttons_pressed = new_buttons_pressed;
     Vector2 joystick_dir = InputDirFromJoystick(&input_state.joystick);
     if (Vector2LengthSqr(joystick_dir) > 0.0f)
