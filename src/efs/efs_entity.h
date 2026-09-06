@@ -25,8 +25,6 @@ typedef struct {
 
 typedef struct efs_Entity {
     efs_Properties props;
-    int next;
-    int prev;
     union {
         Vector2 pos;
         Rectangle rect;
@@ -53,17 +51,42 @@ typedef struct efs_Entity {
     Vector2 spawnedEntityDir;
     struct efs_Entity* following; // this should really be a generational index so that we can solve dangling references.
     Texture2D texture;
+
+    // Intrusive free/active list links - see BulletPool in bullet.h for the
+    // pattern this mirrors. Kept last since these are the fields planned to
+    // survive a future merge of Bullet into efs_Entity.
+    struct efs_Entity* next;
+    struct efs_Entity* prev;
 } efs_Entity;
 
+#define efs_entity_list_for_each(sentinel, it) \
+    for (efs_Entity* (it) = (sentinel)->next; (it) != (sentinel); (it) = (it)->next)
+
+// It's safe to free nodes during iteration here
+#define efs_entity_list_for_each_safe(sentinel, it, tmp) \
+    for (efs_Entity* (it) = (sentinel)->next, *(tmp) = (it)->next; \
+         (it) != (sentinel); \
+         (it) = (tmp), (tmp) = (it)->next)
+
 typedef struct efs_EntityPool {
-    int freeHead;
-    int activeHead;
-    efs_Entity entities[ENTITY_POOL_SIZE];
+    efs_Entity storage[ENTITY_POOL_SIZE];
+
+    // Sentinels for the free/active intrusive lists. These are not real
+    // entities - only their next/prev fields are ever touched.
+    efs_Entity free_list;
+    efs_Entity active_list;
 } efs_EntityPool;
 
+void efs_entity_list_init(efs_Entity* sentinel);
+bool efs_entity_list_is_empty(const efs_Entity* sentinel);
+void efs_entity_list_insert_before(efs_Entity* position, efs_Entity* node);
+void efs_entity_list_push_back(efs_Entity* sentinel, efs_Entity* node);
+void efs_entity_list_push_front(efs_Entity* sentinel, efs_Entity* node);
+void efs_entity_list_remove(efs_Entity* node);
+
 void efs_PoolInit(efs_EntityPool* pool);
-void efs_PoolDelete(efs_EntityPool* pool, int index);
-int efs_PoolAdd(efs_EntityPool* pool, efs_Entity entity);
+void efs_PoolDelete(efs_EntityPool* pool, efs_Entity* entity);
+efs_Entity* efs_PoolAdd(efs_EntityPool* pool, efs_Entity entity);
 
 bool efs_EntityHasProperty(efs_Entity const* entity, efs_PropertyType prop);
 void efs_EntitySetProperty(efs_Entity* entity, efs_PropertyType prop);

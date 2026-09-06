@@ -23,13 +23,13 @@
 #include "efs_entity.h"
 #include "core_game_memory.h"
 
-int handle_lifetime(efs_Entity* entity, soc_GameMemory* memory, int index) {
+int handle_lifetime(efs_Entity* entity, soc_GameMemory* memory) {
     if (efs_EntityHasProperty(entity, efs_prop_HasLifetime))
     {
         entity->lifetime -= GetFrameTime();
         if (entity->lifetime < 0)
         {
-            efs_PoolDelete(&memory->efs_entityPool, index);
+            efs_PoolDelete(&memory->efs_entityPool, entity);
         }
     }
     return 0;

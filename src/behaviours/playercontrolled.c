@@ -31,9 +31,7 @@ void MoveAndResolveCollisions(efs_Entity* player, efs_EntityPool* pool)
 
     player->pos.x += entityStep.x;
 
-    int entityIdx = pool->activeHead;
-    while(entityIdx >= 0) {
-        efs_Entity* wall = &pool->entities[entityIdx];
+    efs_entity_list_for_each(&pool->active_list, wall) {
         if (efs_EntityHasProperty(wall, efs_prop_Solid))
         {
             if (CheckCollisionRecs(wall->rect, player->rect))
@@ -41,11 +39,9 @@ void MoveAndResolveCollisions(efs_Entity* player, efs_EntityPool* pool)
                 player->pos.x += lvl_CollisionAdjust(player->pos.x, player->rect.width, wall->pos.x, wall->rect.width);
             }
         }
-        entityIdx = wall->next;
     }
     player->pos.y += entityStep.y;
-    while(entityIdx >= 0) {
-        efs_Entity* wall = &pool->entities[entityIdx];
+    efs_entity_list_for_each(&pool->active_list, wall) {
         if (efs_EntityHasProperty(wall, efs_prop_Solid))
         {
             if (CheckCollisionRecs(wall->rect, player->rect))
@@ -53,7 +49,6 @@ void MoveAndResolveCollisions(efs_Entity* player, efs_EntityPool* pool)
                 player->pos.y += lvl_CollisionAdjust(player->pos.y, player->rect.height, wall->pos.y, wall->rect.height);
             }
         }
-        entityIdx = wall->next;
     }
 }
 

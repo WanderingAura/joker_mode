@@ -24,10 +24,10 @@
 #include "efs_entity.h"
 #include "core_game_memory.h"
 
-int handle_canDamage(efs_Entity* entity, soc_GameMemory* memory, int index);
+int handle_canDamage(efs_Entity* entity, soc_GameMemory* memory);
 int handle_canMove(efs_Entity* entity, soc_GameMemory* memory);
-int handle_despawnWhenFarFromPlayer(efs_Entity* entity, soc_GameMemory* memory, efs_Entity* player, int index);
-int handle_lifetime(efs_Entity* entity, soc_GameMemory* memory, int index);
+int handle_despawnWhenFarFromPlayer(efs_Entity* entity, soc_GameMemory* memory, efs_Entity* player);
+int handle_lifetime(efs_Entity* entity, soc_GameMemory* memory);
 int handle_hasRotation(efs_Entity* entity);
 int handle_playerControlled(efs_Entity* entity, soc_GameMemory* memory);
 int handle_shootAtMouse(efs_Entity* entity, soc_GameMemory* memory);

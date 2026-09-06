@@ -5,71 +5,72 @@
 #include "based_core.h"
 
 
-int efs_PoolAdd(efs_EntityPool* entityPool, efs_Entity entity) {
-    int nextFreeHead = entityPool->entities[entityPool->freeHead].next;
-    if(nextFreeHead < 0) {
-        printf("Pools closed due to aids, infected line: %d\n", __LINE__);
-        //ran out of space
-        return -1;
-    }
-    
-    DBG_ASSERT_MSG(nextFreeHead >= 0 && nextFreeHead <= ENTITY_POOL_SIZE, "Out of bounds");
-    entityPool->entities[nextFreeHead].prev = -1;
-
-    entity.next = entityPool->activeHead;
-    entity.prev = -1;
-    if (entityPool->activeHead >= 0)
-    {
-        entityPool->entities[entityPool->activeHead].prev = entityPool->freeHead;
-    }
-    DBG_ASSERT_MSG(entityPool->freeHead >= 0 && entityPool->freeHead <= ENTITY_POOL_SIZE, "Out of bounds");
-    entityPool->entities[entityPool->freeHead] = entity;
-
-    entityPool->activeHead = entityPool->freeHead;
-    entityPool->freeHead = nextFreeHead;
-
-    return 0;
+void efs_entity_list_init(efs_Entity* sentinel) {
+    sentinel->next = sentinel;
+    sentinel->prev = sentinel;
 }
 
-void efs_PoolDelete(efs_EntityPool* entityPool, int index) {
-    //collect relevant active entities
-    efs_Entity* entity = &entityPool->entities[index];
+bool efs_entity_list_is_empty(const efs_Entity* sentinel) {
+    return sentinel->next == sentinel;
+}
+
+// Inserts `node` immediately before `position` (position may be the sentinel
+// itself, which inserts at the back of the list).
+void efs_entity_list_insert_before(efs_Entity* position, efs_Entity* node) {
+    node->prev = position->prev;
+    node->next = position;
+    position->prev->next = node;
+    position->prev = node;
+}
+
+void efs_entity_list_push_back(efs_Entity* sentinel, efs_Entity* node) {
+    efs_entity_list_insert_before(sentinel, node);
+}
+
+void efs_entity_list_push_front(efs_Entity* sentinel, efs_Entity* node) {
+    efs_entity_list_insert_before(sentinel->next, node);
+}
+
+// Unlinks `node` from whatever list it's currently in. `node` must be
+// re-inserted into a list before its next/prev fields are used again.
+void efs_entity_list_remove(efs_Entity* node) {
+    node->prev->next = node->next;
+    node->next->prev = node->prev;
+}
+
+efs_Entity* efs_PoolAdd(efs_EntityPool* entityPool, efs_Entity entity) {
+    if (efs_entity_list_is_empty(&entityPool->free_list)) {
+        printf("Pools closed due to aids, infected line: %d\n", __LINE__);
+        //ran out of space
+        return NULL;
+    }
+
+    efs_Entity* node = entityPool->free_list.next;
+    efs_entity_list_remove(node);
+
+    *node = entity;
+    efs_entity_list_push_back(&entityPool->active_list, node);
+
+    return node;
+}
+
+void efs_PoolDelete(efs_EntityPool* entityPool, efs_Entity* entity) {
     memset(&entity->props, 0, sizeof(entity->props));
-    if(entity->next != -1) {
-        efs_Entity* next = &entityPool->entities[entity->next];
-        next->prev = entity->prev;
-    }
-    if(entity->prev != -1) {
-        efs_Entity* prev = &entityPool->entities[entity->prev];    
-        prev->next = entity->next;
-    } else {
-        entityPool->activeHead = entity->next;
-    }
-    
-    //sort out free list
-    entityPool->entities[entityPool->freeHead].prev = index;
-    entity->next = entityPool->freeHead;
-    entity->prev = -1;
-    entityPool->freeHead = index;
+    efs_entity_list_remove(entity);
+    efs_entity_list_push_back(&entityPool->free_list, entity);
 }
 
 void efs_PoolInit(efs_EntityPool* pool) {
     memset(pool, 0, sizeof(*pool));
 
-    pool->freeHead = 0;
-    pool->activeHead = -1;
-    
-    pool->entities[0] = (efs_Entity){ 0 };
-    pool->entities[0].next = 1;
-    pool->entities[0].prev = -1;
-    int poolSize = ArrayCount(pool->entities);
-    for(int i = 1; i < poolSize - 1; i++) {
-        pool->entities[i] = (efs_Entity){ 0 };
-        pool->entities[i].next = i+1;
-        pool->entities[i].prev = i-1;
+    efs_entity_list_init(&pool->free_list);
+    efs_entity_list_init(&pool->active_list);
+
+    int poolSize = ArrayCount(pool->storage);
+    for (int i = 0; i < poolSize; i++) {
+        pool->storage[i] = (efs_Entity){ 0 };
+        efs_entity_list_push_back(&pool->free_list, &pool->storage[i]);
     }
-    pool->entities[poolSize-1].prev = poolSize-2;
-    pool->entities[poolSize-1].next = -1;
 }
 
 bool efs_EntityHasProperty(efs_Entity const* entity, efs_PropertyType prop)

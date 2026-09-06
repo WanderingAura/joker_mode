@@ -19,15 +19,11 @@ void ClampIfPlayer(efs_Entity* entity, BoundingRect bounds)
 void DrawEntities(soc_GameMemory* memory)
 {
     // render entities
-    int index = memory->efs_entityPool.activeHead;
-    while(index >= 0) {
-        efs_Entity* entity = &memory->efs_entityPool.entities[index];
+    efs_entity_list_for_each(&memory->efs_entityPool.active_list, entity) {
         if(efs_EntityHasProperty(entity, efs_prop_HasHealth) && entity->health <= 0) {
-            index = entity->next;
             continue;
         }
         DrawTexturePro(entity->texture, (Rectangle){0.0f, 0.0f, entity->rect.width, entity->rect.height}, entity->rect, (Vector2){0.0f, 0.0f}, 0, WHITE);
-        index = entity->next;
     }
 }
 
@@ -54,10 +50,9 @@ void InitEntities(soc_GameMemory* memory)
     guy.attackCoolDown = 0.0f;
     guy.attackSpeed = 2.0f;
     guy.texture = memory->textures[TextureVGolfer];
-    efs_PoolAdd(&memory->efs_entityPool, guy);
 
     // // store a pointer to the player so that it's easily accessed
-    memory->player = &memory->efs_entityPool.entities[memory->efs_entityPool.activeHead];
+    memory->player = efs_PoolAdd(&memory->efs_entityPool, guy);
 
     Vector2 middleOfScreen = {(float)GetScreenWidth()/2.0f, (float)GetScreenHeight()/2.0f};
 
@@ -105,10 +100,8 @@ bool RectCollidesWall(Rectangle rect, efs_EntityPool* entityPool, Vector2* colli
 {
     collideDir->x = 0;
     collideDir->y = 0;
-    int index = entityPool->activeHead;
-    while (index >= 0)
+    efs_entity_list_for_each(&entityPool->active_list, wallEntity)
     {
-        efs_Entity* wallEntity = &entityPool->entities[index];
         if (efs_EntityHasProperty(wallEntity, efs_prop_Solid))
         {
             if (CheckCollisionRecs(rect, wallEntity->rect))
@@ -116,7 +109,6 @@ bool RectCollidesWall(Rectangle rect, efs_EntityPool* entityPool, Vector2* colli
                 return true;
             }
         }
-        index = wallEntity->next;
     }
     return true;
 }
@@ -147,27 +139,22 @@ void MainGameUpdate(soc_GameMemory* memory)
     //Entity updates
     {
         efs_Entity* player = memory->player;
-        int index = memory->efs_entityPool.activeHead;
-        while(index >= 0) {
-            efs_Entity* entity = &memory->efs_entityPool.entities[index];
-            int nextIndex = entity->next;
+        efs_entity_list_for_each_safe(&memory->efs_entityPool.active_list, entity, nextEntity) {
             //using loop control so not in a function
             if(efs_EntityHasProperty(entity, efs_prop_HasHealth) && entity->health <= 0) {
-                index = nextIndex;
                 continue;
             }
             handle_playerControlled(entity, memory);
             handle_hasRotation(entity);
             handle_canMove(entity, memory);
             handle_solid(entity, player);
-            handle_lifetime(entity, memory, index);
+            handle_lifetime(entity, memory);
             handle_spawner(entity, memory);
             handle_shootAtMouse(entity, memory);
-            handle_canDamage(entity, memory, index);
+            handle_canDamage(entity, memory);
             handle_tempInvincible(entity);
-            handle_despawnWhenFarFromPlayer(entity, memory, player, index);
+            handle_despawnWhenFarFromPlayer(entity, memory, player);
             handle_dodge(entity);
-            index = nextIndex;
         }
     }
 

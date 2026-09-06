@@ -23,14 +23,14 @@
 #include "efs_entity.h"
 #include "core_game_memory.h"
 
-int handle_despawnWhenFarFromPlayer(efs_Entity* entity, soc_GameMemory* memory, efs_Entity* player, int index) {
+int handle_despawnWhenFarFromPlayer(efs_Entity* entity, soc_GameMemory* memory, efs_Entity* player) {
     if (efs_EntityHasProperty(entity, efs_prop_DespawnWhenFarFromPlayer))
     {
         DBG_ASSERT_MSG(entity->despawnDistance > 0, "Got %f despawn distance. Entity with this property should have >0 despawn distance");
         float distanceToPlayer = Vector2Distance(entity->pos, player->pos);
         if (distanceToPlayer > entity->despawnDistance)
         {
-            efs_PoolDelete(&memory->efs_entityPool, index);
+            efs_PoolDelete(&memory->efs_entityPool, entity);
         }
     }
     return 0;

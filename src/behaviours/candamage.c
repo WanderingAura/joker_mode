@@ -23,18 +23,16 @@
 #include "efs_entity.h"
 #include "core_game_memory.h"
 
-int handle_canDamage(efs_Entity* entity, soc_GameMemory* memory, int index) {
-    int j = memory->efs_entityPool.activeHead;
-    while(j >= 0) {
-        efs_Entity* target = &memory->efs_entityPool.entities[j];
-        if(j == index) {
-            j = target->next;
+int handle_canDamage(efs_Entity* entity, soc_GameMemory* memory) {
+    efs_entity_list_for_each(&memory->efs_entityPool.active_list, target) {
+        if (target == entity) {
+            continue;
         }
         if (efs_EntityHasProperty(target, efs_prop_HasHealth)
             && !efs_EntityHasProperty(target, efs_prop_TempInvincible)
-            && efs_EntityHasProperty(entity, efs_prop_CanDamage)                
+            && efs_EntityHasProperty(entity, efs_prop_CanDamage)
             && entity->canDamage == target->damageGroup) {
-            if (target && CheckCollisionRecs(entity->rect, target->rect)) {
+            if (CheckCollisionRecs(entity->rect, target->rect)) {
                 // this projectile has collided with player
                 efs_EntitySetProperty(target, efs_prop_TempInvincible);
                 target->invincibleTimer = 3.0f;
@@ -42,7 +40,6 @@ int handle_canDamage(efs_Entity* entity, soc_GameMemory* memory, int index) {
 
             }
         }
-        j = target->next;
     }
     return 0;
 }
