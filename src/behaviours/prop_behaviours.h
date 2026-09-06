@@ -32,7 +32,6 @@ int handle_hasRotation(efs_Entity* entity);
 int handle_parametricMovement(efs_Entity* entity, soc_GameMemory* memory);
 int handle_playerControlled(efs_Entity* entity, soc_GameMemory* memory);
 int handle_shootAtTarget(efs_Entity* entity, soc_GameMemory* memory);
-int handle_solid(efs_Entity* entity, efs_Entity* player);
 int handle_spawner(efs_Entity* entity, soc_GameMemory* memory);
 int handle_tempInvincible(efs_Entity* entity);
 //Locks the entity into fast movement and sets invulnerability during the movement

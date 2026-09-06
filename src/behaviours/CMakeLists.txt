@@ -13,7 +13,6 @@ target_sources(behaviours PRIVATE
     prop_behaviours.h
     scaleswithdifficulty.c
     shootsattarget.c
-    solid.c
     spawner.c
     tempinvincible.c
     dodge.c

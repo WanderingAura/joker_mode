@@ -79,14 +79,14 @@ static void EnemyTemplatesInit(EntityTemplateTables* templates, const Texture2D 
     efs_EntitySetProperty(chaser, efs_prop_ParametricMovement);
     efs_EntitySetProperty(chaser, efs_prop_ShootsAtTarget);
     efs_EntitySetProperty(chaser, efs_prop_DespawnWhenFarFromPlayer);
-    chaser->health = 10;
+    chaser->health = 5;
     chaser->damage = 1;
     chaser->damageGroup = EnemyGroup;
     chaser->canDamage = PlayerGroup; // contact damage against the player
     chaser->move_type = MovementType_Velocity;
     chaser->targeting_type = TargetType_Direct;
     chaser->parametric_speed = 120.0f; // chase speed; not overwritten each frame in Velocity mode
-    chaser->attackSpeed = 1.5f;
+    chaser->attackCooldown = 1.5f;
     chaser->texture = textures[TextureProjectileSpawner]; // placeholder art - no dedicated enemy sprite yet
     chaser->rect.width = ENEMY_SIZE;
     chaser->rect.height = ENEMY_SIZE;
@@ -106,14 +106,6 @@ void EntityTemplatesInit(EntityTemplateTables* templates, const Texture2D textur
     EnemyTemplatesInit(templates, textures);
 
     BSD_INF("projectile system initialised");
-}
-
-efs_Entity ProjectileEntityCreate(ProjectileType type, Vector2 pos, Vector2 dir)
-{
-    efs_Entity proj = core_GameMemoryGet()->entityTemplates.projectile[type];
-    proj.dir = dir;
-    proj.pos = pos;
-    return proj;
 }
 
 efs_Entity ProjectileSpawnerCreate(SpawnerType type, Vector2 pos, Vector2 dir, SpawnedProjInfo spawnedInfo)

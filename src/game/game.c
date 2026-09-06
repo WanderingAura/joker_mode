@@ -30,9 +30,6 @@ SOC_EXPORT void soc_GameModuleInit(soc_GameMemory* memory)
 
     EntityTemplatesInit(&memory->entityTemplates, memory->textures);
 
-    // efs_Entity proj = ProjectileEntityCreate(ProjectileNormal, (Vector2){(float)GetScreenWidth() / 2.0f,(float)GetScreenHeight()/ 2.0f}, (Vector2){1.0f, 0.0f});
-    // efs_PoolAdd(memory->efs_entityPool, proj);
-
     InitialiseInputs();
 }
 

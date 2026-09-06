@@ -6,8 +6,7 @@ typedef enum ProjectileType
 {
     ProjectileNormal,
     ProjectileCircle,
-    ProjectileNormalSpeedsUp,
-    
+
     ProjectileTypeCount,
 } ProjectileType;
 
@@ -25,9 +24,3 @@ typedef enum EnemyType
 
     EnemyTypeCount,
 } EnemyType;
-
-typedef struct {
-    efs_Entity* template;
-    Vector2 offset;
-    Vector2 dir;
-} SpawnedEntity;

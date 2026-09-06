@@ -31,8 +31,8 @@ int handle_shootAtTarget(efs_Entity* entity, soc_GameMemory* memory) {
         return 0;
     }
 
-    entity->attackCoolDown -= GetFrameTime();
-    if (entity->attackCoolDown > 0) {
+    entity->curAttackCooldown -= GetFrameTime();
+    if (entity->curAttackCooldown > 0) {
         return 0;
     }
 
@@ -44,18 +44,22 @@ int handle_shootAtTarget(efs_Entity* entity, soc_GameMemory* memory) {
         }
         targetPos = GetScreenToWorld2D(GetMousePosition(), memory->camera);
     } else if (entity->target != NULL) {
-        targetPos = entity->target->pos;
+        targetPos = efs_EntityCenter(entity->target);
     } else {
         return 0;
     }
 
-    entity->attackCoolDown = entity->attackSpeed;
+    entity->curAttackCooldown = entity->attackCooldown;
 
     // stats/appearance/move-pattern shape come from the template; only where it's fired
     // from and which way it's aimed vary per shot.
     efs_Entity bullet = *entity->childInfo.template;
     bullet.canDamage = (entity->damageGroup == PlayerGroup) ? EnemyGroup : PlayerGroup;
-    bullet_orient(&bullet, entity->pos, bullet_rotation_to(entity->pos, targetPos));
+
+    Vector2 shooterCenter = efs_EntityCenter(entity);
+    // spawn so the bullet's own center (not its top-left corner) starts at the shooter's center
+    Vector2 origin = Vector2Subtract(shooterCenter, (Vector2){bullet.rect.width / 2.0f, bullet.rect.height / 2.0f});
+    bullet_orient(&bullet, origin, bullet_rotation_to(shooterCenter, targetPos));
     efs_PoolAdd(&memory->efs_entityPool, bullet);
 
     return 0;

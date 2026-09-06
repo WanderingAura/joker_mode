@@ -35,7 +35,8 @@ int handle_canDamage(efs_Entity* entity, soc_GameMemory* memory) {
             if (CheckCollisionRecs(entity->rect, target->rect)) {
                 // this projectile has collided with player
                 efs_EntitySetProperty(target, efs_prop_TempInvincible);
-                target->invincibleTimer = 3.0f;
+                efs_EntitySetProperty(target, efs_prop_DamageFlash);
+                target->invincibleTimer = DMG_INVINCIBLE_TIME;
                 target->health -= entity->damage;
 
             }

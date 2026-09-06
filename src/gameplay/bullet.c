@@ -119,9 +119,12 @@ void bullet_update(efs_Entity* bullet, f32 speed_multiplier)
     }
     else if (bullet->move_type == MovementType_Velocity)
     {
-        Vector2 target_pos = bullet->target->pos;
+        // steer center-to-center, not corner-to-corner, so e.g. a chasing enemy's body
+        // actually converges on its target's body rather than its target's top-left corner
+        Vector2 target_pos = efs_EntityCenter(bullet->target);
+        Vector2 self_pos = efs_EntityCenter(bullet);
         f32 speed = bullet->parametric_speed * speed_multiplier;
-        bullet->vel = vel_from_target(bullet->targeting_type, target_pos, bullet->pos, speed, bullet->vel);
+        bullet->vel = vel_from_target(bullet->targeting_type, target_pos, self_pos, speed, bullet->vel);
         bullet->pos = Vector2Add(bullet->pos, Vector2Scale(bullet->vel, t));
     }
     else

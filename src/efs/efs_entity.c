@@ -122,3 +122,8 @@ void efs_EntitySetProperties(efs_Entity* entity, efs_PropertyType* props, u32 nu
         efs_EntitySetProperty(entity, props[i]);
     }
 }
+
+Vector2 efs_EntityCenter(const efs_Entity* entity)
+{
+    return (Vector2){entity->pos.x + entity->rect.width / 2.0f, entity->pos.y + entity->rect.height / 2.0f};
+}

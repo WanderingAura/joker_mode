@@ -20,6 +20,7 @@ typedef enum {
     efs_prop_CanDodge,
     efs_prop_TempInvincible, //removes efs_prop_Invincible after time passes
     efs_prop_Invincible,
+    efs_prop_DamageFlash, // purely cosmetic "just got hit" marker - distinct from efs_prop_Invincible so sources of invincibility that aren't a hit (e.g. dodging) don't flash
     efs_prop_DespawnWhenFarFromPlayer,
     efs_prop_ScalesWithDifficulty,
     efs_prop_Solid, // stops the player from moving through it

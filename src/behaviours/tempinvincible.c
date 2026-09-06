@@ -34,6 +34,7 @@ int handle_tempInvincible(efs_Entity* entity) {
         {
             efs_EntityUnsetProperty(entity, efs_prop_Invincible);
             efs_EntityUnsetProperty(entity, efs_prop_TempInvincible);
+            efs_EntityUnsetProperty(entity, efs_prop_DamageFlash);
         }
     }
     return 0;

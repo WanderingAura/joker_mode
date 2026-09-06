@@ -9,6 +9,10 @@
 #define DODGE_COOLDOWN 2
 #define DODGE_DURATION 1
 
+// i-frame duration after taking damage (efs_prop_TempInvincible); also drives the
+// flashing-red damage animation while that invincibility is active - see DrawEntities.
+#define DMG_INVINCIBLE_TIME 2.0f
+
 // Max number of simultaneous per-axis patterns a parametrically-moving entity
 // (see MovementType_Parametric) can sum together
 #define MAX_SIMUL_PATTERNS 8
@@ -91,8 +95,8 @@ typedef struct efs_Entity {
     float baseRotationSpeed;
     float baseMoveSpeed;
     float invincibleTimer;
-    float attackSpeed;
-    float attackCoolDown;
+    float attackCooldown;
+    float curAttackCooldown;
     Vector2 offsetFromParent;
     int health;
     DamageGroup damageGroup;
@@ -163,3 +167,8 @@ efs_Entity* efs_PoolAlloc(efs_EntityPool* pool);
 bool efs_EntityHasProperty(efs_Entity const* entity, efs_PropertyType prop);
 void efs_EntitySetProperty(efs_Entity* entity, efs_PropertyType prop);
 void efs_EntityUnsetProperty(efs_Entity *entity, efs_PropertyType prop);
+
+// entity->pos (== rect.x/y) is the entity's top-left corner everywhere in this codebase
+// (matches DrawTexturePro/CheckCollisionRecs) - use this wherever "the entity's visual
+// center" is actually the intended meaning (aiming, camera follow, chase targets, ...).
+Vector2 efs_EntityCenter(const efs_Entity* entity);

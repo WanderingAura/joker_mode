@@ -1,18 +1,30 @@
+#include <math.h>
+
 #include "core_menu_state.h"
 #include "input.h"
 #include "state_transition.h"
 #include "efs_entity.h"
 #include "core_game_memory.h"
 #include "core_entity_template.h"
+#include "core_wall.h"
 #include "prop_behaviours.h"
 
-void ClampIfPlayer(efs_Entity* entity, BoundingRect bounds)
+#define WALL_THICKNESS 32.0f
+
+// Flash rate (cycles/sec) for the white<->red damage-flash tint.
+#define DMG_FLASH_HZ 3.0f
+
+// A random top-left position on the perimeter of `bounds` for an entity of `size`, chosen so
+// its rect (top-left based, like everywhere else in the entity system) stays entirely inside
+// `bounds` - flush with the edge rather than spilling into the walls just beyond it.
+static Vector2 RandomPointOnBoundsEdge(BoundingRect bounds, Vector2 size)
 {
-    if (efs_EntityHasProperty(entity, efs_prop_PlayerControlled))
+    switch (GetRandomValue(0, 3))
     {
-        // clamp player movement within the level's bounds
-        Vector2 max = Vector2Subtract(bounds.max, (Vector2){entity->rect.width, entity->rect.height});
-        entity->pos = Vector2Clamp(entity->pos, bounds.min, max);
+        case 0: return (Vector2){(f32)GetRandomValue((int)bounds.min.x, (int)(bounds.max.x - size.x)), bounds.min.y}; // top
+        case 1: return (Vector2){(f32)GetRandomValue((int)bounds.min.x, (int)(bounds.max.x - size.x)), bounds.max.y - size.y}; // bottom
+        case 2: return (Vector2){bounds.min.x, (f32)GetRandomValue((int)bounds.min.y, (int)(bounds.max.y - size.y))}; // left
+        default: return (Vector2){bounds.max.x - size.x, (f32)GetRandomValue((int)bounds.min.y, (int)(bounds.max.y - size.y))}; // right
     }
 }
 
@@ -23,7 +35,15 @@ void DrawEntities(soc_GameMemory* memory)
         if(efs_EntityHasProperty(entity, efs_prop_HasHealth) && entity->health <= 0) {
             continue;
         }
-        DrawTexturePro(entity->texture, (Rectangle){0.0f, 0.0f, entity->rect.width, entity->rect.height}, entity->rect, (Vector2){0.0f, 0.0f}, 0, WHITE);
+
+        Color tint = WHITE;
+        if (efs_EntityHasProperty(entity, efs_prop_DamageFlash))
+        {
+            f32 blend = (sinf(entity->invincibleTimer * 2.0f * PI * DMG_FLASH_HZ) + 1.0f) / 2.0f; // 0..1
+            tint = ColorLerp(WHITE, RED, blend);
+        }
+
+        DrawTexturePro(entity->texture, (Rectangle){0.0f, 0.0f, entity->rect.width, entity->rect.height}, entity->rect, (Vector2){0.0f, 0.0f}, 0, tint);
     }
 }
 
@@ -46,24 +66,12 @@ void InitEntities(soc_GameMemory* memory)
     guy.rect.width = 64.0f;
     guy.baseMoveSpeed = 300.0f;
     guy.childInfo.template = &memory->entityTemplates.projectile[ProjectileNormal];
-    guy.attackCoolDown = 0.0f;
-    guy.attackSpeed = 2.0f;
+    guy.curAttackCooldown = 0.0f;
+    guy.attackCooldown = 0.5f;
     guy.texture = memory->textures[TextureVGolfer];
 
     // // store a pointer to the player so that it's easily accessed
     memory->player = efs_PoolAdd(&memory->efs_entityPool, guy);
-
-    Vector2 middleOfScreen = {(float)GetScreenWidth()/2.0f, (float)GetScreenHeight()/2.0f};
-
-    SpawnedProjInfo spawnedInfo = {
-        ProjectileCircle,
-        .offset = {100, 0},
-        .dir = {0,1}};
-    efs_Entity spawner = ProjectileSpawnerCreate(SpawnerNormal, middleOfScreen, (Vector2){1.0f, 0.0f}, spawnedInfo);
-    efs_PoolAdd(&memory->efs_entityPool, spawner);
-
-    // efs_Entity wall = CreateWall((Rectangle){100.0f, 100.0f, 100.0f, 100.0f}, memory->textures[TextureWall]);
-    // efs_PoolAdd(&memory->efs_entityPool, wall);
 }
 
 void DrawBounds(BoundingRect bounds)
@@ -84,59 +92,46 @@ void InitDemoLevel(soc_GameMemory* memory)
     efs_PoolInit(&memory->efs_entityPool);
 
     core_TilemapInit(&memory->tilemap, (Vector2){0,0}, 16, 12, memory->textures[TextureGrass]);
+    memory->levelBounds = (BoundingRect){{0,0}, {800,600}};
     InitEntities(memory);
+    CreateRoomWalls(&memory->efs_entityPool, memory->levelBounds.min, memory->levelBounds.max, WALL_THICKNESS, memory->textures[TextureWall]);
     //Add guy to pool
     memory->camera.target = (Vector2){(float)GetScreenWidth()/2.0f, (float)GetScreenHeight()/2.0f};
     memory->camera.zoom = 1.0f;
     memory->camera.offset = (Vector2){(float)GetScreenWidth()/2.0f, (float)GetScreenHeight()/2.0f};
-    memory->levelBounds = (BoundingRect){{0,0}, {800,600}};
     memory->levelTimer = 0.0f;
 
     EntityTemplatesInit(&memory->entityTemplates, memory->textures);
-}
-
-bool RectCollidesWall(Rectangle rect, efs_EntityPool* entityPool, Vector2* collideDir)
-{
-    collideDir->x = 0;
-    collideDir->y = 0;
-    efs_entity_list_for_each(&entityPool->active_list, wallEntity)
-    {
-        if (efs_EntityHasProperty(wallEntity, efs_prop_Solid))
-        {
-            if (CheckCollisionRecs(rect, wallEntity->rect))
-            {
-                return true;
-            }
-        }
-    }
-    return true;
 }
 
 void MainGameUpdate(soc_GameMemory* memory)
 {
     memory->levelTimer += GetFrameTime();
     static int frameCount = 0;
-    if (frameCount % (60*2) == 0)
-    {
-        Vector2 position = {GetRandomValue(-50, 850), GetRandomValue(-50, 650)};
-        Vector2 direction = Vector2Rotate((Vector2){1.0f, 0.0f}, GetRandomValue(0, 360));
-        efs_Entity spawner;
-        SpawnedProjInfo spawnedInfo = {ProjectileCircle, {1, 0}, {1,0}};
-        spawner = ProjectileSpawnerCreate(SpawnerNormal, position, direction, spawnedInfo);
-        efs_PoolAdd(&memory->efs_entityPool, spawner);
-    }
-    else if (frameCount % (60*3) == 0)
-    {
-        Vector2 position = {GetRandomValue(100, 500), GetRandomValue(100, 400)};
-        Vector2 direction = Vector2Rotate((Vector2){1.0f, 0.0f}, GetRandomValue(0, 360));
-        efs_Entity spawner;
-        SpawnedProjInfo spawnedInfo = {ProjectileNormal, {1, 0}, {1,0}};
-        spawner = ProjectileSpawnerCreate(SpawnerNormal, position, direction, spawnedInfo);
-        efs_PoolAdd(&memory->efs_entityPool, spawner);
-    }
+    // Rectangle spawnerRect = memory->entityTemplates.spawner[SpawnerNormal].rect;
+    // Vector2 spawnerSize = {spawnerRect.width, spawnerRect.height};
+    // if (frameCount % (60*2) == 0)
+    // {
+    //     Vector2 position = RandomPointOnBoundsEdge(memory->levelBounds, spawnerSize);
+    //     Vector2 direction = Vector2Rotate((Vector2){1.0f, 0.0f}, GetRandomValue(0, 360));
+    //     efs_Entity spawner;
+    //     SpawnedProjInfo spawnedInfo = {ProjectileCircle, {1, 0}, {1,0}};
+    //     spawner = ProjectileSpawnerCreate(SpawnerNormal, position, direction, spawnedInfo);
+    //     efs_PoolAdd(&memory->efs_entityPool, spawner);
+    // }
+    // else if (frameCount % (60*3) == 0)
+    // {
+    //     Vector2 position = RandomPointOnBoundsEdge(memory->levelBounds, spawnerSize);
+    //     Vector2 direction = Vector2Rotate((Vector2){1.0f, 0.0f}, GetRandomValue(0, 360));
+    //     efs_Entity spawner;
+    //     SpawnedProjInfo spawnedInfo = {ProjectileNormal, {1, 0}, {1,0}};
+    //     spawner = ProjectileSpawnerCreate(SpawnerNormal, position, direction, spawnedInfo);
+    //     efs_PoolAdd(&memory->efs_entityPool, spawner);
+    // }
     if (frameCount % (60*4) == 0)
     {
-        Vector2 position = {GetRandomValue(-50, 850), GetRandomValue(-50, 650)};
+        Rectangle enemyRect = memory->entityTemplates.enemy[EnemyChaser].rect;
+        Vector2 position = RandomPointOnBoundsEdge(memory->levelBounds, (Vector2){enemyRect.width, enemyRect.height});
         efs_Entity enemy = EnemyEntityCreate(EnemyChaser, position);
         efs_PoolAdd(&memory->efs_entityPool, enemy);
     }
@@ -154,7 +149,6 @@ void MainGameUpdate(soc_GameMemory* memory)
             handle_hasRotation(entity);
             handle_canMove(entity, memory);
             handle_parametricMovement(entity, memory);
-            handle_solid(entity, player);
             handle_lifetime(entity, memory);
             handle_spawner(entity, memory);
             handle_shootAtTarget(entity, memory);
@@ -171,7 +165,7 @@ void MainGameUpdate(soc_GameMemory* memory)
     {
         TransitionToState(memory, MenuState_GameOver);
     }
-    memory->camera.target = memory->player->pos;
+    memory->camera.target = efs_EntityCenter(memory->player);
     BeginDrawing();
     {
         ClearBackground(BLACK);

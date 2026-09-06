@@ -1,31 +1,16 @@
-#include <stdlib.h>
-#include <raylib.h>
+#include <math.h>
 
-// returns the required movement to stop collision in a given dimension
-int lvl_CollisionAdjust(int x1, int w1, int x2, int w2)
+#include "lvl_collision.h"
+
+f32 lvl_CollisionAdjust(f32 aPos, f32 aSize, f32 bPos, f32 bSize)
 {
-    int dist = x2 - x1;
-    // half widths
-    int hw1 = w1/2;
-    int hw2 = w2/2;
-
-    int x1High = x1 + hw1;
-    int x1Low = x1 - hw1;
-
-    int x2High = x2 + hw2;
-    int x2Low = x2 - hw2;
-
-    if (abs(dist) < hw1 + hw2)
+    f32 overlap = fminf(aPos + aSize, bPos + bSize) - fmaxf(aPos, bPos);
+    if (overlap <= 0.0f)
     {
-        // collided
-        if (dist <= 0)
-        {
-            return x2High - x1Low;
-        }
-        else
-        {
-            return x2Low - x1High;
-        }
+        return 0.0f;
     }
-    return 0;
+
+    f32 aCenter = aPos + aSize / 2.0f;
+    f32 bCenter = bPos + bSize / 2.0f;
+    return (aCenter < bCenter) ? -overlap : overlap;
 }
